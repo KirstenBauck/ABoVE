@@ -18,8 +18,9 @@ Of the 7 different datasets, each masked out different things as no data. For ex
 3. Apply the Common NA Mask using `submit_apply_mask.sh`
 
 ## Calculate Zonal Statisics
-Zonal statistics for the EPA level 2 regions and the Alaska/Canada proviences can be calculate using `sbatch submit_zonal_stats.sh <input_raster_file> <script_type> <coverage_ratio>` where: 
+Zonal statistics for the EPA level 2 regions and the Alaska/Canada proviences can be calculate using `sbatch submit_zonal_stats.sh <input_raster_file> <script_type> <coverage_ratio>` where:
 
-    - `<input_raster_file>` is the dataset in `.tif` format.
-    - `<script_type>` is `CanadaAlaska` or `EPA2` representing what type of zonal statisics to calculate
-    - `<coverage_ratio>` is the acceptance ratio that the dataset covers a specfic zonal region. It is recommended to set this to 90.
+- `<input_raster_file>` is the dataset in `.tif` format.
+- `<script_type>` is `CanadaAlaska` or `EPA2` representing what type of zonal statisics to calculate
+ - `<coverage_ratio>` is the acceptance ratio that the dataset covers a specfic zonal region. It is recommended to set this to 90.
+
