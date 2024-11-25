@@ -4,6 +4,9 @@ from rasterio.warp import reproject, Resampling
 import numpy as np
 
 def apply_na_mask(dataset_path, mask_paths):
+    """
+    Apply one or more masks to a dataset, preserving the dataset's original resolution and extent.
+    """
     with rasterio.open(dataset_path) as src:
         # Read the dataset metadata
         dataset_transform = src.transform
