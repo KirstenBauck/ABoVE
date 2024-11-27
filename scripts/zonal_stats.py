@@ -33,7 +33,10 @@ def process_zone(zone_row, src, file_type, coverage_ratio):
 
     # Flatten, remove NoData, calculate percentage of shape covered by valid data
     out_image = out_image.flatten()
-    valid_data = out_image[out_image != no_data_value]
+    if np.isnan(no_data_value):
+        valid_data = out_image[~np.isnan(out_image)]
+    else:
+        valid_data = out_image[out_image != no_data_value]
     valid_pixels = valid_data.size
     valid_area = valid_pixels * pixel_area
     geometry_area = geometry.area
@@ -74,9 +77,9 @@ if __name__ == "__main__":
 
     # Check which type of script to run
     if args.script_type == 'EPA2':
-        shapefile = "/projects/arctic/share/ABoVE_Biomass/OtherSpatialDatasets/EPA_ecoregion_lvl2_clipped_4326.shp"
+        shapefile = "/projects/arctic/share/ABoVE_Biomass/OtherSpatialDatasets/EPA_ecoregion_lvl2_clipped_102001.shp"
     elif args.script_type == 'CanadaAlaska':
-        shapefile = "/projects/arctic/share/ABoVE_Biomass/OtherSpatialDatasets/CanadaAlaska_Boundaries_4326.shp"
+        shapefile = "/projects/arctic/share/ABoVE_Biomass/OtherSpatialDatasets/CanadaAlaska_Boundaries_102001.shp"
     
     coverage_ratio_percent = int(args.coverage_ratio * 100)
     
