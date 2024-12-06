@@ -15,7 +15,7 @@ Of the 7 different datasets, each masked out different things as no data. For ex
     - Kraatz: Covers a tiny area that would not be useful in creating the na mask
     - Wang: Covers a small area that would mask out too many values in the other datasets
     - Xu: Resolution is too high (10,000m/pixel) compare to other datasets
-3. Apply the Common NA Mask using `submit_apply_mask.sh`
+2. Apply the Common NA Mask using `submit_apply_mask.sh`
 
 ## Calculate Zonal Statisics
 Zonal statistics for the EPA level 2 regions and the Alaska/Canada proviences can be calculate using `sbatch submit_zonal_stats.sh <input_raster_file> <script_type> <coverage_ratio>` where:
