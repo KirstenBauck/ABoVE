@@ -67,6 +67,7 @@ def process_zone(zone_row, src, file_type, coverage_ratio):
     actual_cover = valid_area / geometry_area
 
     # Check if the raster actually covers the zone well
+    print(f"    The coverage area of {zone_name} is {actual_cover}")
     if actual_cover >= float(coverage_ratio):
         # Calculate statistics
         mean = np.nanmean(valid_data)
@@ -74,7 +75,6 @@ def process_zone(zone_row, src, file_type, coverage_ratio):
         sum = np.nansum(valid_data)
         std = np.nanstd(valid_data)
         return (zone_name, mean, median, sum, std)
-    print(f"Did not include {zone_name} because coverage ratio was {actual_cover}")
     return (zone_name, None, None, None, None)
 
 def calculate_zonal_stats_parallel(raster_file, shapefile, output_file, file_type, coverage_ratio):
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Zonal Statistics Calculation Script")
     parser.add_argument('--infile', type=str, required=True, help="Path to input raster file")
     parser.add_argument('--script_type', type=str, choices=['EPA2', 'CanadaAlaska'], required=True, help="Type of script to run (EPA2 or CanadaAlaska)")
-    parser.add_argument('--coverage_ratio', type=float, required=True, help="Coverage rati (number 0-1)")
+    parser.add_argument('--coverage_ratio', type=float, required=True, help="Coverage ratio (number 0-1)")
     args = parser.parse_args()
 
     # Check which type of script to run

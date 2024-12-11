@@ -7,6 +7,7 @@ Anything that was used to process the datasets further is located in `scripts/da
 2. Reproject Duncanson dataset into ESRI:102001 in order to create a common NA Mask. This was done in multiple steps as it was found the original Duncanson merged tif file was bad.
     1. Download the Duncanson tiles from the [ORNAL DAAC website](https://daac.ornl.gov/ABOVE/guides/Boreal_AGB_Density_ICESat2.html). This can be run using the `submit_duncanson_download.sh` script. (**Note:** One will first need to order the data and then swap the link in the `download_duncnason.py` script, as this dataset does not have API access as of Novemebr 2024)
     2. Mosaic and reproject the downloaded tiles using gdal in the `mosaic_reproject_duncanson.sh` script.
+3. Make Duncanson and Matasci into into BigTIFF file types in order to be able to read in and process there data. This can be done using the `make_bigtifs.sh` script.
 
 ## Creating and Applying the Common NA Mask
 Of the 7 different datasets, each masked out different things as no data. For example, one dataset may have only masked out bodies of water, while another may have masked out bodies of water and baren ground. In order to acurately calculate statisticsa cross the datasets, we want to create a Common NA Mask. This mask will then be applied across the datasets before calculating statistics.
@@ -22,5 +23,5 @@ Zonal statistics for the EPA level 2 regions and the Alaska/Canada proviences ca
 
 - `<input_raster_file>` is the dataset in `.tif` format.
 - `<script_type>` is `CanadaAlaska` or `EPA2` representing what type of zonal statisics to calculate
- - `<coverage_ratio>` is the acceptance ratio that the dataset covers a specfic zonal region. It is recommended to set this to 90.
+ - `<coverage_ratio>` is the acceptance ratio that the dataset covers a specfic zonal region. It is recommended to set this to 35.
 
