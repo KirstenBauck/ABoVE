@@ -26,14 +26,10 @@ def apply_na_mask(dataset_path, mask_path):
             nodata = np.nan
             profile.update(dtype=rasterio.float32)
         
-        # To ensure the mask work properly, if the nodata value is none, set to 0
+        # Update the profile, just want the value to be 0
         if np.isnan(nodata):
             profile.update({'nodata': float(0)})
-            original_data = np.nan_to_num(original_data, nan=0)
-            nodata = float(0)
-        else:
-            profile.update({'nodata': nodata})
-
+        
         # Prepare output file path
         dir_name, base_name = os.path.split(dataset_path)
         output_path = os.path.join(dir_name, base_name.replace('.tif', '_masked.tif'))
@@ -44,6 +40,13 @@ def apply_na_mask(dataset_path, mask_path):
                 for ji, window in src.block_windows(1):
                     # Read the data for this window
                     original_data = src.read(1, window=window)
+
+                    # To ensure the mask work properly, if the nodata value is none, set to 0
+                    if np.isnan(nodata):
+                        original_data = np.nan_to_num(original_data, nan=0)
+                        nodata_update = float(0)
+                    else:
+                        nodata_update = nodata
 
                     # Create a np array similar to the original data to fill in with masked values
                     mask_aligned = np.empty_like(original_data, dtype=np.uint8)
@@ -63,14 +66,14 @@ def apply_na_mask(dataset_path, mask_path):
 
                     # Apply the mask to the data
                     mask_bool = mask_aligned.astype(bool)
-                    original_data[mask_bool] = nodata
+                    original_data[mask_bool] = nodata_update
 
                     # Write the masked data for this window
                     dst.write(original_data, 1, window=window)
 
             # Something happened when processing the raster
             except Exception as e:
-                print(f"Error processing raster: {e}")
+                print(f"Error processing raster ({mask_path}): {e}")
 
     print(f"Masked dataset saved to: {output_path}")
 
@@ -81,10 +84,10 @@ alaska_mask = "/projects/arctic/share/ABoVE_Biomass/OtherSpatialDatasets/CommonN
 
 # Datasets to apply the masks to
 canada_datasets = ["/projects/arctic/share/ABoVE_Biomass/Guindon2023/Guindon2023_102001.tif",
-                    "/projects/arctic/share/ABoVE_Biomass/Matasci2018/matasci_102001.tif"]
+                    "/projects/arctic/share/ABoVE_Biomass/Matasci2018/matasci_102001_bigtiff.tif"]
 canada_alaska_datasets =[ "/projects/arctic/share/ABoVE_Biomass/Soto-Navarro2020/Soto2020_102001.tif",
                       "/projects/arctic/share/ABoVE_Biomass/SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif",
-                      "/projects/arctic/share/ABoVE_Biomass/Duncanson2023/Duncanson2023_102001.tif"]
+                      "/projects/arctic/share/ABoVE_Biomass/Duncanson2023/Duncanson2023_102001_bigtiff.tif"]
 
 # Apply Alaska mask to Canada-Alaska datasets
 for dataset in canada_alaska_datasets:
