@@ -18,10 +18,12 @@ Of the 7 different datasets, each masked out different things as no data. For ex
     - Xu: Resolution is too high (10,000m/pixel) compare to other datasets
 2. Apply the Common NA Mask using `submit_apply_mask.sh`
 
-## Calculate Zonal Statisics
+## Calculate Zonal Statistics
 Zonal statistics for the EPA level 2 regions and the Alaska/Canada proviences can be calculate using `sbatch submit_zonal_stats.sh <input_raster_file> <script_type> <coverage_ratio>` where:
 
 - `<input_raster_file>` is the dataset in `.tif` format.
-- `<script_type>` is `CanadaAlaska` or `EPA2` representing what type of zonal statisics to calculate
+- `<script_type>` is `CanadaAlaska` or `EPA2` representing what type of zonal statistics to calculate
  - `<coverage_ratio>` is the acceptance ratio that the dataset covers a specfic zonal region. It is recommended to set this to 35.
 
+# Create charts of Zonal Statistics
+After running `submit_zonal_stats.sh`, data can be visualized using the jupyter notebook `jupyter_notebooks/Create_Stats_Graphs.ipynb`. The notebook is set up in such a way where one only needs to specify where the `zonal_stats*.txt` files are located and which zonal stats one wants to visualize (EPA2 or CanadaAlaska).
