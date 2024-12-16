@@ -3,7 +3,7 @@
 #SBATCH --output=zonal_stats_%j.out     # Standard output and error log (%j will be replaced by the job ID)
 #SBATCH --ntasks=1                      # Number of tasks
 #SBATCH --cpus-per-task=32              # Number of CPU cores per task
-#SBATCH --time=12:00:00                 # Walltime
+#SBATCH --time=24:00:00                 # Walltime
 #SBATCH --mem=512G                      # Memory per node
 
 # Load necessary modules

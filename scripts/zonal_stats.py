@@ -95,7 +95,7 @@ def calculate_zonal_stats_parallel(raster_file, shapefile, output_file, file_typ
     shapes = gpd.read_file(shapefile)
     
     # Use multiprocessing to process zones in parallel
-    with Pool() as pool:
+    with Pool(processes=8) as pool:
         results = pool.starmap(process_zone, [(row, raster_file, file_type, coverage_ratio) for _, row in shapes.iterrows()])
 
     # Write results to a file
