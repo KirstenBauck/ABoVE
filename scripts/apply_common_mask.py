@@ -68,6 +68,9 @@ def apply_na_mask(dataset_path, mask_path):
                     mask_bool = mask_aligned.astype(bool)
                     original_data[mask_bool] = nodata_update
 
+                    # Replace any remaining NaN values in the data with the nodata value
+                    original_data = np.nan_to_num(original_data, nan=nodata_update)
+
                     # Write the masked data for this window
                     dst.write(original_data, 1, window=window)
 
@@ -90,9 +93,12 @@ canada_alaska_datasets =[ "/projects/arctic/share/ABoVE_Biomass/Soto-Navarro2020
                       "/projects/arctic/share/ABoVE_Biomass/Duncanson2023/Duncanson2023_102001_bigtiff.tif"]
 
 # Apply Alaska mask to Canada-Alaska datasets
-for dataset in canada_alaska_datasets:
-    apply_na_mask(dataset, alaska_mask)
+#for dataset in canada_alaska_datasets:
+#    apply_na_mask(dataset, alaska_mask)
 
 # Apply Canada mask to Canada datasets
-for dataset in canada_datasets:
-    apply_na_mask(dataset, canada_mask)
+#for dataset in canada_datasets:
+#    apply_na_mask(dataset, canada_mask)
+
+apply_na_mask("/projects/arctic/share/ABoVE_Biomass/Matasci2018/matasci_102001_bigtiff.tif", alaska_mask)
+apply_na_mask("/projects/arctic/share/ABoVE_Biomass/Duncanson2023/Duncanson2023_102001_bigtiff.tif", canada_mask)
