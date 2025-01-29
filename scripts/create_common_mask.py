@@ -68,12 +68,12 @@ def calculate_common_bounds_overlap(tif_files):
 
 def create_na_mask(type):
     """
-    Creates and saves a common NA mask for a specified region (Canada or Alaska) based on
+    Creates and saves a common NA mask for a specified region (Canada or ABoVE) based on
     overlaping extents of specified raster files
 
     Args:
         type (str): The region for which to create the NA mask.
-                    Options are "Canada" or "Alaska"
+                    Options are "Canada" or "ABoVE"
     
     File Paths:
         - "Canada":
@@ -82,10 +82,11 @@ def create_na_mask(type):
             - `/projects/arctic/share/ABoVE_Biomass/Matasci2018/matasci_102001.tif`
             - `/projects/arctic/share/ABoVE_Biomass/Soto-Navarro2020/Soto2020_102001.tif`
             - `/projects/arctic/share/ABoVE_Biomass/SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif`
-        - "Alaska":
+        - "ABoVE":
             - `/projects/arctic/share/ABoVE_Biomass/Duncanson2023/Duncanson2023_102001.tif`
             - `/projects/arctic/share/ABoVE_Biomass/Soto-Navarro2020/Soto2020_102001.tif`
             - `/projects/arctic/share/ABoVE_Biomass/SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif`
+            - `/projects/arctic/share/ABoVE_Biomass/Wang2020/Wang102001.tif`
     """
     if type == "Canada":
         # Paths not included:
@@ -99,16 +100,17 @@ def create_na_mask(type):
                         "/projects/arctic/share/ABoVE_Biomass/Soto-Navarro2020/Soto2020_102001.tif",
                         "/projects/arctic/share/ABoVE_Biomass/SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif"]
         # Calculate common bound based on where they all overlap
-    elif type == "Alaska":
-        # These are the file paths we should use for the Alaska region
+    elif type == "ABoVE":
+        # These are the file paths we should use for the ABoVE region
         file_paths = ["/projects/arctic/share/ABoVE_Biomass/Duncanson2023/Duncanson2023_102001.tif", 
                         "/projects/arctic/share/ABoVE_Biomass/Soto-Navarro2020/Soto2020_102001.tif",
-                      "/projects/arctic/share/ABoVE_Biomass/SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif"]
+                      "/projects/arctic/share/ABoVE_Biomass/SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif",
+                      "/projects/arctic/share/ABoVE_Biomass/Wang2020/Wang102001.tif"]
     
     target_shape = calculate_common_bounds_overlap(file_paths)
 
     # Set desired resolution and inirialize common NA array
-    resolution = 300 # Use corsest resolution (exluding Xu)
+    resolution = 30 # Use the best resolution
     width = int((target_shape[2] - target_shape[0]) / resolution)
     height = int((target_shape[3] - target_shape[1]) / resolution)
     transform = rasterio.transform.from_bounds(*target_shape, width, height)
@@ -135,7 +137,7 @@ def create_na_mask(type):
 if __name__ == "__main__":
     # Parse arguments
     parser = argparse.ArgumentParser(description="Common NA Mask Script")
-    parser.add_argument('--type', type=str, choices=['Alaska', 'Canada'], required=True, help="Type of script to run (Alaska or Canada)")
+    parser.add_argument('--type', type=str, choices=['ABoVE', 'Canada'], required=True, help="Type of script to run (ABoVE or Canada)")
     args = parser.parse_args()
 
     # Run script
