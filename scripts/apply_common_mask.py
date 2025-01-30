@@ -81,24 +81,29 @@ def apply_na_mask(dataset_path, mask_path):
     print(f"Masked dataset saved to: {output_path}")
 
 
-# Mask paths, made from `submit_na_mask.sh`
-canada_mask = "/projects/arctic/share/ABoVE_Biomass/OtherSpatialDatasets/CommonNA_Canada_Mask.tif"
-alaska_mask = "/projects/arctic/share/ABoVE_Biomass/OtherSpatialDatasets/CommonNA_Alaska_Mask.tif"
+if __name__ == "__main__":
+    # Change this variable as necessary
+    directory = "/projects/arctic/share/ABoVE_Biomass"
 
-# Datasets to apply the masks to
-canada_datasets = ["/projects/arctic/share/ABoVE_Biomass/Guindon2023/Guindon2023_102001.tif",
-                    "/projects/arctic/share/ABoVE_Biomass/Matasci2018/matasci_102001_bigtiff.tif"]
-canada_alaska_datasets =[ "/projects/arctic/share/ABoVE_Biomass/Soto-Navarro2020/Soto2020_102001.tif",
-                      "/projects/arctic/share/ABoVE_Biomass/SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif",
-                      "/projects/arctic/share/ABoVE_Biomass/Duncanson2023/Duncanson2023_102001_bigtiff.tif"]
+    # Mask paths, made from `submit_na_mask.sh`
+    canada_mask = f"{directory}/OtherSpatialDatasets/CommonNA_Canada_Mask.tif"
+    above_mask = f"{directory}/OtherSpatialDatasets/CommonNA_Alaska_Mask.tif"
 
-# Apply Alaska mask to Canada-Alaska datasets
-#for dataset in canada_alaska_datasets:
-#    apply_na_mask(dataset, alaska_mask)
+    # Datasets to apply the masks to
+    canada_datasets = [f"{directory}/Guindon2023/Guindon2023_102001.tif",
+                        f"{directory}/Matasci2018/matasci_102001_bigtiff.tif",
+                        f"{directory}/Duncanson2023/Duncanson2023_102001.tif",
+                        f"{directory}/Soto-Navarro2020/Soto2020_102001.tif",
+                        f"{directory}/SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif"]
+    above_datasets =[ f"{directory}/Soto-Navarro2020/Soto2020_102001.tif",
+                        f"{directory}/SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif",
+                        f"{directory}/Duncanson2023/Duncanson2023_102001_bigtiff.tif",
+                        f"{directory}/Wang2020/Wang102001.tif"]
 
-# Apply Canada mask to Canada datasets
-#for dataset in canada_datasets:
-#    apply_na_mask(dataset, canada_mask)
+    # Apply ABoVE mask to ABoVE datasets
+    for dataset in above_datasets:
+        apply_na_mask(dataset, above_mask)
 
-apply_na_mask("/projects/arctic/share/ABoVE_Biomass/Matasci2018/matasci_102001_bigtiff.tif", alaska_mask)
-apply_na_mask("/projects/arctic/share/ABoVE_Biomass/Duncanson2023/Duncanson2023_102001_bigtiff.tif", canada_mask)
+    # Apply Canada mask to Canada datasets
+    for dataset in canada_datasets:
+        apply_na_mask(dataset, canada_mask)
