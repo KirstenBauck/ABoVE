@@ -66,7 +66,7 @@ def calculate_common_bounds_overlap(tif_files):
             )
     return common_bounds
 
-def create_na_mask(type):
+def create_na_mask(type, directory):
     """
     Creates and saves a common NA mask for a specified region (Canada or ABoVE) based on
     overlaping extents of specified raster files
@@ -77,35 +77,36 @@ def create_na_mask(type):
     
     File Paths:
         - "Canada":
-            - `/projects/arctic/share/ABoVE_Biomass/Duncanson2023/Duncanson2023_102001.tif`
-            - `/projects/arctic/share/ABoVE_Biomass/Guindon2023/Guindon2023_102001.tif`
-            - `/projects/arctic/share/ABoVE_Biomass/Matasci2018/matasci_102001.tif`
-            - `/projects/arctic/share/ABoVE_Biomass/Soto-Navarro2020/Soto2020_102001.tif`
-            - `/projects/arctic/share/ABoVE_Biomass/SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif`
+            - `../Duncanson2023/Duncanson2023_102001.tif`
+            - `../Guindon2023/Guindon2023_102001.tif`
+            - `../Matasci2018/matasci_102001.tif`
+            - `../Soto-Navarro2020/Soto2020_102001.tif`
+            - `../SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif`
         - "ABoVE":
-            - `/projects/arctic/share/ABoVE_Biomass/Duncanson2023/Duncanson2023_102001.tif`
-            - `/projects/arctic/share/ABoVE_Biomass/Soto-Navarro2020/Soto2020_102001.tif`
-            - `/projects/arctic/share/ABoVE_Biomass/SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif`
-            - `/projects/arctic/share/ABoVE_Biomass/Wang2020/Wang102001.tif`
+            - `../Duncanson2023/Duncanson2023_102001.tif`
+            - `../Soto-Navarro2020/Soto2020_102001.tif`
+            - `../SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif`
+            - `../Wang2020/Wang102001.tif`
     """
+
     if type == "Canada":
         # Paths not included:
             # Kraatz: Way too small
             # Wang: Doesnt cover that much of the area
             # Xu: Resolution is jsut too high
         # These are the file paths we should use for the Canada region
-        file_paths = ["/projects/arctic/share/ABoVE_Biomass/Duncanson2023/Duncanson2023_102001.tif", 
-                        "/projects/arctic/share/ABoVE_Biomass/Guindon2023/Guindon2023_102001.tif",
-                        "/projects/arctic/share/ABoVE_Biomass/Matasci2018/matasci_102001.tif",
-                        "/projects/arctic/share/ABoVE_Biomass/Soto-Navarro2020/Soto2020_102001.tif",
-                        "/projects/arctic/share/ABoVE_Biomass/SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif"]
+        file_paths = [f"{directory}/Duncanson2023/Duncanson2023_102001.tif", 
+                        f"{directory}/Guindon2023/Guindon2023_102001.tif",
+                        f"{directory}/Matasci2018/matasci_102001.tif",
+                        f"{directory}/Soto-Navarro2020/Soto2020_102001.tif",
+                        f"{directory}/SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif"]
         # Calculate common bound based on where they all overlap
     elif type == "ABoVE":
         # These are the file paths we should use for the ABoVE region
-        file_paths = ["/projects/arctic/share/ABoVE_Biomass/Duncanson2023/Duncanson2023_102001.tif", 
-                        "/projects/arctic/share/ABoVE_Biomass/Soto-Navarro2020/Soto2020_102001.tif",
-                      "/projects/arctic/share/ABoVE_Biomass/SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif",
-                      "/projects/arctic/share/ABoVE_Biomass/Wang2020/Wang102001.tif"]
+        file_paths = [f"{directory}/Duncanson2023/Duncanson2023_102001.tif", 
+                        f"{directory}/Soto-Navarro2020/Soto2020_102001.tif",
+                      f"{directory}/SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif",
+                      f"{directory}/Wang2020/Wang102001.tif"]
     
     target_shape = calculate_common_bounds_overlap(file_paths)
 
@@ -131,7 +132,7 @@ def create_na_mask(type):
         'width': width,
         'transform': transform,
         'crs': crs}
-    with rasterio.open(f"/projects/arctic/share/ABoVE_Biomass/OtherSpatialDatasets/CommonNA_{type}_Mask.tif", "w", **mask_profile) as mask_dst:
+    with rasterio.open(f"{directory}/OtherSpatialDatasets/CommonNA_{type}_Mask.tif", "w", **mask_profile) as mask_dst:
         mask_dst.write(common_na_mask.astype(np.uint8), 1)
 
 if __name__ == "__main__":
@@ -140,6 +141,8 @@ if __name__ == "__main__":
     parser.add_argument('--type', type=str, choices=['ABoVE', 'Canada'], required=True, help="Type of script to run (ABoVE or Canada)")
     args = parser.parse_args()
 
+    # Change this variable as necessary
+    directory = "/projects/arctic/share/ABoVE_Biomass"
+
     # Run script
-    create_na_mask(args.type)
-    
+    create_na_mask(args.type, directory)
