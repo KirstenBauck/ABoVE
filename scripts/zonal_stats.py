@@ -18,7 +18,7 @@ def process_zone(zone_row, src, file_type, coverage_ratio):
                               Must include a `geometry` column and column for zone ID
         src (str): File path to the input raster file
         file_type (str): The type of geographic zone dataset
-                            - `CanadaAlaska`: Uses the `postal` column for zone ID
+                            - `Canada`: Uses the `postal` column for zone ID
                             - `EPA2`: Uses the `NA_L2KEY` column for zone identification
         coverage_ratio (float): The minimum faction of the zone's area that must be covered
                                 by valid raster data for the zone to be included in results
@@ -33,7 +33,7 @@ def process_zone(zone_row, src, file_type, coverage_ratio):
     """
     # Get the geometry and zone name
     geometry = zone_row['geometry']
-    if file_type == 'CanadaAlaska':
+    if file_type == 'Canada':
         zone_name = zone_row['postal']
     elif file_type == 'EPA2':
         zone_name = zone_row['NA_L2KEY']
@@ -86,7 +86,7 @@ def calculate_zonal_stats_parallel(raster_file, shapefile, output_file, file_typ
         shapefile (str): Path to the shapefile containing the geographic zones.
         output_file (str): Path to the output file where the zonal statistics will be saved.
         file_type (str): The type of geographic zones in the shapefile.
-                            - "CanadaAlaska": Uses the 'postal' column for zone identification.
+                            - "Canada": Uses the 'postal' column for zone identification.
                             - "EPA2": Uses the 'NA_L2KEY' column for zone identification.
         coverage_ratio (float): The minimum fraction of a zone's area that must be covered by valid raster 
                                 data for it to be included in the results.
@@ -109,21 +109,21 @@ if __name__ == "__main__":
     # Parse arguments
     parser = argparse.ArgumentParser(description="Zonal Statistics Calculation Script")
     parser.add_argument('--infile', type=str, required=True, help="Path to input raster file")
-    parser.add_argument('--script_type', type=str, choices=['EPA2', 'CanadaAlaska'], required=True, help="Type of script to run (EPA2 or CanadaAlaska)")
+    parser.add_argument('--script_type', type=str, choices=['EPA2', 'Canada'], required=True, help="Type of script to run (EPA2 or Canada)")
     parser.add_argument('--coverage_ratio', type=float, required=True, help="Coverage ratio (number 0-1)")
     args = parser.parse_args()
 
     # Check which type of script to run
     if args.script_type == 'EPA2':
         shapefile = "/projects/arctic/share/ABoVE_Biomass/OtherSpatialDatasets/EPA_ecoregion_lvl2_clipped_102001.shp"
-    elif args.script_type == 'CanadaAlaska':
+    elif args.script_type == 'Canada':
         shapefile = "/projects/arctic/share/ABoVE_Biomass/OtherSpatialDatasets/CanadaAlaska_Boundaries_102001.shp"
     
     # Create output file name
     directory = os.path.dirname(args.infile)
-    folder_name = os.path.basename(directory)
+    folder_name = os.path.basename(directory).split('.')[0]
     coverage_ratio_percent = int(args.coverage_ratio * 100)
-    output_file = f"zonal_stats_{args.script_type}_{folder_name}_{coverage_ratio_percent}.txt"
+    output_file = f"zonal_stats/zonal_stats_{args.script_type}_{folder_name}_{coverage_ratio_percent}.txt"
 
     # Run parallel zonal stats and write to file
     calculate_zonal_stats_parallel(args.infile, shapefile, output_file, args.script_type, args.coverage_ratio)

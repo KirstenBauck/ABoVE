@@ -21,11 +21,6 @@ def apply_na_mask(dataset_path, mask_path, name):
         nodata = src.nodata if src.nodata is not None else np.nan
         profile = src.profile
 
-        #This is just for Duncanson to ensure proper processing
-        if os.path.basename(dataset_path) == "Duncanson2023_BigTIFF.tif"
-            profile.update({'BIGTIFF': 'YES'})
-            profile.update({'tiled': True})
-
         # Ensure the dataset is float and update the NoData value
         if np.isnan(nodata):
             print(f"NoData value is not set in {dataset_path}. Defaulting to 0.0.")
@@ -43,7 +38,7 @@ def apply_na_mask(dataset_path, mask_path, name):
             try:
                 for ji, window in src.block_windows(1):
                     # Read the data for this window
-                    original_data = src.read(1, window=window)
+                    original_data = src.read(20, window=window)
 
                     # Ensure NoData values are consistent (replace nans with nodata)
                     original_data = np.nan_to_num(original_data, nan=nodata)
@@ -98,23 +93,6 @@ if __name__ == "__main__":
     canada_mask = f"{directory}/OtherSpatialDatasets/CommonNA_Canada_Mask.tif"
     above_mask = f"{directory}/OtherSpatialDatasets/CommonNA_ABoVE_Mask.tif"
 
-    # Datasets to apply the masks to
-    canada_datasets = [f"{directory}/Guindon2023/Guindon2023_102001.tif",
-                        f"{directory}/Matasci2018/matasci_102001_bigtiff.tif",
-                        f"{directory}/Duncanson2023_new/Duncanson2023_BigTIFF.tif",
-                        f"{directory}/Soto-Navarro2020/Soto2020_102001.tif",
-                        f"{directory}/SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif",
-                        f"{directory}/Xu2021/Xu2021_102001.tif"]
-    above_datasets =[ f"{directory}/Soto-Navarro2020/Soto2020_102001.tif",
-                        f"{directory}/SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif",
-                        f"{directory}/Duncanson2023_new/Duncanson2023_BigTIFF.tif",
-                        f"{directory}/Wang2020/Wang102001.tif",
-                        f"{directory}/Xu2021/Xu2021_102001.tif"]
+    apply_na_mask(f"{directory}/Xu2021/Xu2021_102001.tif", canada_mask, 'Canada')
+    apply_na_mask(f"{directory}/Xu2021/Xu2021_102001.tif", above_mask, 'ABoVE')
 
-    # Apply ABoVE mask to ABoVE datasets
-    for dataset in above_datasets:
-        apply_na_mask(dataset, above_mask, 'ABoVE')
-
-    # Apply Canada mask to Canada datasets
-    for dataset in canada_datasets:
-        apply_na_mask(dataset, canada_mask, 'Canada')
