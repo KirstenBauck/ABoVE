@@ -1,0 +1,20 @@
+/var/spool/slurm/slurmd/job15824557/slurm_script: line 10: /packages/anaconda3/2024.02/etc/profile.d/conda/sh: No such file or directory
+NoData value is not set in /projects/arctic/share/ABoVE_Biomass/Soto-Navarro2020/Soto2020_102001.tif. Defaulting to 0.0.
+Masked dataset saved to: /projects/arctic/share/ABoVE_Biomass/Soto-Navarro2020/Soto2020_102001_masked_ABoVE.tif
+NoData value is not set in /projects/arctic/share/ABoVE_Biomass/SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif. Defaulting to 0.0.
+Masked dataset saved to: /projects/arctic/share/ABoVE_Biomass/SpawnGibbs2020/SpawnGibbs2020_mask_102001_masked_ABoVE.tif
+Masked dataset saved to: /projects/arctic/share/ABoVE_Biomass/Duncanson2023_new/Duncanson2023_BigTIFF_masked_ABoVE.tif
+NoData value is not set in /projects/arctic/share/ABoVE_Biomass/Wang2020/Wang102001.tif. Defaulting to 0.0.
+Masked dataset saved to: /projects/arctic/share/ABoVE_Biomass/Wang2020/Wang102001_masked_ABoVE.tif
+NoData value is not set in /projects/arctic/share/ABoVE_Biomass/Xu2021/Xu2021_102001.tif. Defaulting to 0.0.
+Masked dataset saved to: /projects/arctic/share/ABoVE_Biomass/Xu2021/Xu2021_102001_masked_ABoVE.tif
+Masked dataset saved to: /projects/arctic/share/ABoVE_Biomass/Guindon2023/Guindon2023_102001_masked_Canada.tif
+NoData value is not set in /projects/arctic/share/ABoVE_Biomass/Matasci2018/matasci_102001_bigtiff.tif. Defaulting to 0.0.
+Masked dataset saved to: /projects/arctic/share/ABoVE_Biomass/Matasci2018/matasci_102001_bigtiff_masked_Canada.tif
+Masked dataset saved to: /projects/arctic/share/ABoVE_Biomass/Duncanson2023_new/Duncanson2023_BigTIFF_masked_Canada.tif
+NoData value is not set in /projects/arctic/share/ABoVE_Biomass/Soto-Navarro2020/Soto2020_102001.tif. Defaulting to 0.0.
+Masked dataset saved to: /projects/arctic/share/ABoVE_Biomass/Soto-Navarro2020/Soto2020_102001_masked_Canada.tif
+NoData value is not set in /projects/arctic/share/ABoVE_Biomass/SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif. Defaulting to 0.0.
+Masked dataset saved to: /projects/arctic/share/ABoVE_Biomass/SpawnGibbs2020/SpawnGibbs2020_mask_102001_masked_Canada.tif
+NoData value is not set in /projects/arctic/share/ABoVE_Biomass/Xu2021/Xu2021_102001.tif. Defaulting to 0.0.
+Masked dataset saved to: /projects/arctic/share/ABoVE_Biomass/Xu2021/Xu2021_102001_masked_Canada.tif

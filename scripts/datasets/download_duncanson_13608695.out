@@ -1,2 +1,0 @@
-/var/spool/slurm/slurmd/job13608695/slurm_script: line 10: /packages/anaconda3/2024.02/etc/profile.d/conda/sh: No such file or directory
-slurmstepd: error: *** JOB 13608695 ON cn28 CANCELLED AT 2024-11-01T08:29:04 DUE TO TIME LIMIT ***
