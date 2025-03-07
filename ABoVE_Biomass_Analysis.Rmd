@@ -1,0 +1,1159 @@
+---
+title: "Meta Analysis"
+author: "DevonMaloney"
+date: "2024-06-26"
+output: word_document
+---
+
+###ABoVE Biomass Comparative Analysis 
+In this analysis, we compare eight datasets: 
+  1) Duncanson et al. 2023
+  2) Guindon et al. 2023
+  3) Kraatz et al. 2022
+  4) Matasci et al. 2018 
+  5) Soto-Navarro et al. 2020
+  6) Spawn and Gibbs 2020 
+  7) Wang et al. 2020
+  8) Xu et al. 2021
+
+Outline of methods: 
+
+For each dataset: 
+  - Reproject dataset to WGS 84 (EPSG 4326) 
+  - Create map of dataset footprint
+  - Create map of dataset (cropped to Alaska and Canada)
+  - Create map of Great Slave Lake study area and calculate sum
+  - Create map of Alaska fire disturbance area and calculate sum
+  - Create map of British Columbia timber harvest area and calculate sum
+
+#Install and call required packages
+```{r include=FALSE}
+
+#install.packages(c("ggplot2", "RColorBrewer", "sp", "terra", "sf", "viridis", "ggspatial", "broman", "patchwork", "tidyterra", "raster", "cowplot", "dplyr", "stringr", "spdep", "ModelMetrics", "ggpmisc"))
+
+lapply(c("ggplot2", "RColorBrewer", "sp", "terra", "sf", "viridis", "ggspatial", "broman", "patchwork", "tidyterra", "raster", "cowplot", "dplyr", "stringr", "spdep", "ModelMetrics", "ggpmisc"), require, character.only = TRUE)
+
+```
+
+#Set up 
+```{r}
+# Set your working directory
+wkdir = "G:/.shortcut-targets-by-id/15NjTWbCiv4HHa2ebSX0gJjPfaH74mX3E/ABoVE"
+setwd(wkdir)
+
+x = ext(-180, -50, 40, 120)
+
+GSL_ext = ext(-117.7, -117.1, 61.3, 61.6)
+GSL_extp = as.polygons(GSL_ext)
+crs(GSL_extp) ="+init=EPSG:4326"
+writeVector(GSL_extp, 'GSL_ext.shp', overwrite=TRUE)
+
+Fire_ext = ext (-144.4, -142, 66.15, 67.0)
+Fire_extp <- as.polygons(Fire_ext)
+crs(Fire_extp) ="+init=EPSG:4326"
+writeVector(Fire_extp, 'Fire_ext1.shp', overwrite=TRUE)
+
+Harvest_ext = ext(c(-123.8, -123.4, 54.4, 54.6))
+Harvest_extp = as.polygons(Harvest_ext)
+crs(Harvest_extp) ="+init=EPSG:4326"
+writeVector(Harvest_extp, 'Harvest_ext.shp', overwrite=TRUE)
+
+AlaskaCanada = read_sf(paste(wkdir, "/OtherSpatialDatasets/CanadaAlaska_Boundaries.shp", sep=""))
+AlaskaCanada  = st_transform(AlaskaCanada , "epsg:4326")
+AlaskaCanada_102001 =  st_transform(AlaskaCanada , "ESRI:102001")
+AlaskaCanada_102001_ext = ext(AlaskaCanada_102001)
+AlaskaCanada_102001_extp = as.polygons(AlaskaCanada_102001_ext)
+crs(AlaskaCanada_102001_extp) ="ESRI:102001"
+writeVector(AlaskaCanada_102001_extp, 'AlaskaCanada_102001_ext.shp', overwrite=TRUE)
+AlaskaCanada_102001_box = read_sf('AlaskaCanada_102001_ext.shp')
+```
+
+# Create a Map of the ABoVE Domain
+```{r}
+# Calculate country boundaries
+countries = read_sf(paste(wkdir, "/OtherSpatialDatasets/ne_10m_admin_1_states_provinces/ne_10m_admin_1_states_provinces.shp", sep=""))
+countries = subset(countries, name != "Antarctica")
+countries_102001  = st_transform(countries , "ESRI:102001")
+countries_102001_clip= st_crop(countries_102001[9], ext(c(-4723580.79629, 3393326.24459, 112160.744998, 4992413.57745)))
+
+# Read in rasters for the study areas and the ABoVE Doman
+studyarea = read_sf(paste(wkdir, "/OtherSpatialDatasets/ABoVE_Study_Domain/ABoVE_Study_Domain.shp", sep=""))
+studyarea  = st_transform(studyarea , "ESRI:102001")
+AlaskaCanada = st_read(paste(wkdir, "/OtherSpatialDatasets/CanadaAlaska_Boundaries.shp", sep=""))
+AlaskaCanada  = st_transform(AlaskaCanada , "epsg:4326")
+
+# Apply an extent and the ESRI:102001 CRS
+AlaskaCanada_102001_ext = ext(c(-4422954.60958742, 3092700.05788824, 292910.849904229, 4811663.47254589))
+AlaskaCanada_102001_ext = ext(c(-4723580.79629, 3393326.24459, 112160.744998, 4992413.57745))
+AlaskaCanada_102001_extp = as.polygons(AlaskaCanada_102001_ext)
+crs(AlaskaCanada_102001_extp) ="ESRI:102001"
+writeVector(AlaskaCanada_102001_extp, 'AlaskaCanada_102001_ext.shp', overwrite=TRUE)
+AlaskaCanada_102001_box = read_sf('AlaskaCanada_102001_ext.shp')
+
+# Create the actual plot
+ggplot(studyarea) +
+  geom_sf(data = countries_102001, fill = "#e5e5e5", color= "grey75")+
+  geom_sf(data = studyarea, aes(fill = Region))+
+  scale_fill_manual(name = "Study Domain",
+    values = c("Core Region" = "#9a9a9a",
+                "Extended Region" = "#b3b3b3")) +
+  labs(title = "Study Area Domain")+
+  geom_sf(data = Fire_extp, fill = "grey20", color = "black", linewidth = 0.2) +
+  geom_sf(data = Harvest_extp, fill = "grey20", color = "black", linewidth = 0.2) +
+  geom_sf(data = GSL_extp, fill = "grey20", color = "black", linewidth = 0.2) +
+  theme_light() +
+  xlim(-3398274.7629, 623682.7259)+
+  ylim(997535.0933,  4562704.8882 )+
+  #annotation_scale() +
+  theme(plot.title = element_text(hjust = 0.5),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(), 
+    plot.subtitle = element_text(hjust = 0.5), 
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(), 
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank())
+```
+
+# Create Map of EPA Ecoregions Level 2 - Used for statisics caluclations later on
+```{r}
+EcoRegions = read_sf(paste(wkdir, "OtherSpatialDatasets/EPA_ecoregion_lvl2_clipped_102001.shp", sep="/"))
+EcoRegions = st_transform(EcoRegions, "ESRI:102001")
+
+#Map of study area over Alaska and Canada
+ggplot(EcoRegions) +
+  geom_sf(data = countries_102001, fill = "#e5e5e5", color= "grey75")+
+  geom_sf(data = EcoRegions,  aes(fill = NA_L2KEY))+
+  scale_fill_grey()+
+  labs(title = "EPA Ecoregions Level 2") +
+  theme_light() +
+  xlim(-4422954.60958742, 3092700.05788824)+
+  ylim(292910.849904229, 4811663.47254589)+
+  annotation_scale() +
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(), 
+    legend.position='none', 
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(), 
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank())
+```
+
+# Set up for Fire Disturbances Study Areas
+```{r}
+BurnAreas = read_sf(paste(wkdir, "OtherSpatialDatasets/fire_selected.shp", sep="/"))
+BurnAreas = st_transform(BurnAreas, crs=4326)
+
+BurnAreas = BurnAreas %>% mutate(across('Incid_Name', str_replace, 'ZITZIANA', 'Zitziana (2009)'))
+BurnAreas = BurnAreas %>% mutate(across('Incid_Name', str_replace, 'BEAVER LOG LAKES', 'Beaver Log Lakes (2013)'))
+BurnAreas = BurnAreas %>% mutate(across('Incid_Name', str_replace, 'MOOSEHEART', 'Mooseheart (2018)'))
+BurnAreas = BurnAreas %>% mutate(across('Incid_Name', str_replace, 'LLOYD MOUNTAIN', 'Lloyd Mountain (2019)'))
+
+Fire2009 = subset(BurnAreas, BurnAreas$Ig_Date == "2009-06-17")
+Fire2013 = subset(BurnAreas, BurnAreas$Ig_Date == "2013-06-22")
+Fire2018 = subset(BurnAreas, BurnAreas$Ig_Date == "2018-06-07")
+Fire2019 = subset(BurnAreas, BurnAreas$Ig_Date == "2019-06-23")
+
+BurnArea_ext = ext(c(-152.719711906879, -150.237250706955, 63.4174610103174, 65.4170700001804))
+BurnArea_ext <- as.polygons(BurnArea_ext)
+BurnArea_ext <- sf::st_as_sf(BurnArea_ext)
+st_crs(BurnArea_ext) = st_crs(BurnAreas)
+
+Fire2009_ext = ext(Fire2009)
+Fire2013_ext = ext(Fire2013)
+Fire2018_ext = ext(Fire2018)
+Fire2019_ext = ext(Fire2019)
+
+combined_fire <- rbind(Fire2009, Fire2013, Fire2018, Fire2019)
+# Optionally, you can add a column to identify which dataset each row belongs to
+combined_fire$year <- rep(c("2009", "2013", "2018", "2019"), 
+                          times = c(nrow(Fire2009), nrow(Fire2013),
+                                  nrow(Fire2018), nrow(Fire2019)))
+#st_write(combined_fire, "combined_fire_extent.shp")
+```
+
+## Fire Disturbance plot
+```{r}
+  ggplot(data = BurnAreas) +
+  geom_sf(data = BurnAreas, aes(fill = Incid_Name))+
+  labs(title = "Wildfire Disturbances", xlab="", ylab="")+
+  theme_light() +
+  scale_fill_manual(values = c("Zitziana (2009)" = "#efdecd"  ,
+                                "Beaver Log Lakes (2013)" = "#ee204d"   ,
+                                "Mooseheart (2018)"="#fff44f", 
+                                "Lloyd Mountain (2019)" = "#ff7538"), 
+                     name = "Fire name")+
+  scale_x_continuous(breaks = c(-151.0, -151.5, -152.0)) +
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank())
+
+#inset = 
+  ggplot(data = AlaskaCanada) + 
+  geom_sf(data = AlaskaCanada) +
+  geom_sf(data = studyarea, linewidth = 0, aes(fill = Region)) +
+  scale_fill_manual(name = "Study Domain",
+    values = c("Core Region" = "#9a9a9a",
+                "Extended Region" = "#b3b3b3")) +
+  geom_sf(data = BurnArea_ext, fill = "transparent", color = "black", linewidth = 0.2) +
+  geom_sf(data = BurnAreas, fill = "black")+
+  xlim (-179.2, -129) +
+  ylim (51.2, 71.4) +
+  theme_light() +
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(), 
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(), 
+    legend.position="none")
+
+```
+
+# Set up for Timber Harvest Disturbance Study Areas
+```{r}
+HarvestAreas = read_sf(paste(wkdir, "OtherSpatialDatasets/VectorizedHarvest.shp", sep="/"))
+#st_write(Harvestsubset, "combined_harvest_extent.shp")
+
+Harvestsubset = subset(HarvestAreas, HarvestAreas$DN == c(2009,2013,2014,2018,2019))
+Harvest2009 = subset(HarvestAreas, HarvestAreas$DN == 2009)
+Harvest2013 = subset(HarvestAreas, HarvestAreas$DN == 2013)
+Harvest2014 = subset(HarvestAreas, HarvestAreas$DN == 2014)
+Harvest2018 = subset(HarvestAreas, HarvestAreas$DN == 2018)
+Harvest2019 = subset(HarvestAreas, HarvestAreas$DN == 2019)
+
+Harvest_ext = ext(c(-123.8, -123.4, 54.4, 54.6))
+Harvest_ext <- as.polygons(Harvest_ext)
+Harvest_ext <- sf::st_as_sf(Harvest_ext)
+st_crs(Harvest_ext) = st_crs(HarvestAreas)
+
+Harvestsubset$DN = as.character(Harvestsubset$DN)
+
+plot(Harvest2009[2], main ="timber 2009")
+plot(Harvest2013[2], main ="timber 2003")
+plot(Harvest2014[2], main ="timber 2014")
+plot(Harvest2018[2], main ="timber 2018")
+plot(Harvest2019[2], main ="timber 2019")
+```
+
+# Harvest Areas (ha) <-- done for each harvest year
+```{r}
+Harvest2009_projected <- st_transform(Harvest2009$geometry, 4326)
+areas <- st_area(Harvest2009_projected)
+area_ha = sum(areas) / 10000
+```
+
+# Harvest Areas Disturbance Plots
+```{r}
+ggplot(data = Harvestsubset) +
+  geom_sf(data = Harvestsubset, aes(fill = DN, color = DN)) +
+  labs(title = "Harvest Disturbances", xlab="", ylab="") +
+  scale_fill_manual(values = c("2009" = "#80daeb"  ,
+                               "2013" =  "#926eae" ,
+                               "2014" = "#9D29BD" ,
+                               "2018" = "#1f75fe" , 
+                               "2019" = "#1a4876"),
+                    name = "Harvest year") + 
+   scale_color_manual(values = c("2009" = "#80daeb"  ,
+                                 "2013" =  "#926eae" ,
+                                 "2014" = "#9D29BD" ,
+                                 "2018" = "#1f75fe" , 
+                                 "2019" = "#1a4876"), 
+                      name = "Harvest year") +
+  theme_light() +
+  scale_x_continuous(breaks = c(-124.6, -124.2, -123.8, -123.4)) +
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank())
+
+ggplot(data = Harvestsubset) +
+  geom_sf(data = Harvestsubset, aes(fill = DN, color = DN)) +
+  labs(title = "Harvest Disturbances", xlab="", ylab="") +
+  scale_fill_manual(values = c("2009" = "#80daeb"  ,
+                               "2013" =  "#926eae" ,
+                               "2014" = "#9D29BD" ,
+                               "2018" = "#1f75fe" , 
+                               "2019" = "#1a4876"), 
+                     name = "Harvest year")+
+   scale_color_manual(values = c("2009" = "#80daeb"  ,
+                                 "2013" =  "#926eae" ,
+                                 "2014" = "#9D29BD" ,
+                                 "2018" = "#1f75fe" , 
+                                 "2019" = "#1a4876"),
+                      name = "Harvest year") +
+  xlim (-123.66, -123.3696) + 
+  ylim ( 54.48, 54.61) +
+  theme_light() +
+  #scale_x_continuous(breaks = c(-124.6, -124.2, -123.8, -123.4)) +
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank())
+
+ggplot(data = AlaskaCanada) + 
+  geom_sf(data = AlaskaCanada) +
+  geom_sf(data = studyarea, linewidth = 0, aes(fill = Region)) +
+  scale_fill_manual(name = "Study Domain",
+      values = c("Core Region" = "#93dfb8",
+      "Extended Region" = "#9aceeb")) +
+  geom_sf(data = Harvest_ext, fill = "white", color = "black", linewidth = 0.2) +
+  geom_sf(data = Harvest2009, fill = "black")+
+    geom_sf(data = Harvest2013, fill = "black")+
+    geom_sf(data = Harvest2018, fill = "black")+
+    geom_sf(data = Harvest2019, fill = "black")+
+  xlim (-150, -100)+
+  ylim (51.2, 71.4)+
+  theme_light()+
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(), 
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(), 
+    legend.position="none")
+
+```
+# Function used to create Statistics Summary for given dataset
+```{r}
+calculate_global_stats <- function(raster_data) {
+  stats <- c("sum", "mean", "min", "max", "sd")
+  result <- sapply(stats, function(stat) {
+    global(raster_data, stat, na.rm=TRUE)[[1]]
+  })
+  # Convert the result to a data frame with a single row
+  result_df <- as.data.frame(t(result))
+  return(result_df)
+}
+
+calculate_metrics <- function(observed, predicted) {
+  metrics <- data.frame(
+    MAE = mae(observed, predicted),
+    RMSE = rmse(observed, predicted),
+    R_squared = cor(observed, predicted)^2
+  )
+  return(metrics)
+}
+```
+
+# Duncanson et al. 2023: Setup -project into WGS 84
+```{r}
+Duncanson2023 = rast(paste(wkdir, "Duncanson2023/boreal_agb_202302061675663506_2760.tif", sep="/"))
+Duncanson2023 = Duncanson2023[[1]]
+Duncanson2023 <- terra::project(Duncanson2023, WGS84 <- "+init=EPSG:4326")
+Duncanson2023_mask = mask(Duncanson2023, AlaskaCanada)
+plot(Duncanson2023_mask)
+
+```
+
+#Duncanson et al. 2023: Footprint
+```{r}
+DuncansonFootprint = read_sf(paste(wkdir, "Duncanson2023/DucansonFootprint_dissolve.shp", sep="/"))
+DuncansonFootprint = st_transform(DuncansonFootprint, "EPSG:4326")
+
+ggplot(data = DuncansonFootprint)+
+  geom_sf(data = countries, fill = "#e5e5e5", color= "grey75")+
+  geom_sf(data =  DuncansonFootprint, fill = "grey30", color = "transparent") +
+  labs(title = "Footprint: Duncanson et al. (2023)") +
+  theme_light()+
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(), 
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank())
+
+```
+
+#Duncanson et al. 2023: Great Slave Lake Study Area
+```{r}
+Duncanson2023_GSLcrop = crop(Duncanson2023, GSL_ext)
+calculate_global_stats(Duncanson2023_GSLcrop)
+
+ggplot(data = Duncanson2023_GSLcrop)+
+  geom_spatraster(data = Duncanson2023_GSLcrop) +
+  labs(title = "Great Slave Lake: Duncanson et al. 2023") +
+  theme_light()+
+  scale_fill_viridis(na.value="white", 
+                     limits=c(0,150), 
+                     name = "Biomass \n(Mg of C \nper ha)\n") +
+  scale_y_continuous(breaks = c(61.3, 61.4, 61.5, 61.6))+
+  scale_x_continuous(breaks = c(-117.6, -117.4, -117.2, -117.0)) +
+  coord_sf(expand=FALSE) +
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank())
+
+```
+
+# Duncanson et al. 2023: Alaska Fire Disturbance stats 
+```{r}
+# Prepare all the data files needed to cover the fire disturbance region
+Duncanson2023_fire1 = rast(paste(wkdir, "Duncanson2023/boreal_agb_202302061675666285_3551.tif", sep="/"))
+Duncanson2023_fire2 = rast(paste(wkdir, "Duncanson2023/boreal_agb_202302061675669847_3456.tif", sep="/"))
+Duncanson2023_fire3 = rast(paste(wkdir, "Duncanson2023/boreal_agb_202302061675666684_3645.tif", sep="/"))
+
+Duncanson2023_fire1 = Duncanson2023_fire1 [[1]]
+Duncanson2023_fire2 = Duncanson2023_fire2 [[1]]
+Duncanson2023_fire3 = Duncanson2023_fire3 [[1]]
+
+Duncanson2023_fire1 <- terra::project(Duncanson2023_fire1, WGS84 <- "+init=EPSG:4326")
+Duncanson2023_fire2 <- terra::project(Duncanson2023_fire2, WGS84 <- "+init=EPSG:4326")
+Duncanson2023_fire3 <- terra::project(Duncanson2023_fire3, WGS84 <- "+init=EPSG:4326")
+
+Duncanson2023_4326 = rast("D:/ABoVE_Biomass/Duncanson1_EPSG4326.tif") # Duncanson1 was re-projected using gdal
+```
+```{r}
+# Calculate for 2019 fire
+Duncanson2023_fire1crop = crop(Duncanson2023_fire1, Fire2019_ext)
+Duncanson2023_fire2crop = crop(Duncanson2023_fire2, Fire2019_ext)
+# Merge data sets into one
+fire1_resampled <- resample(Duncanson2023_fire1crop, Duncanson2023_fire2crop, method = "bilinear")
+Duncanson2023_firecrop <- merge(fire1_resampled, Duncanson2023_fire2crop)
+# Then create a mask to get the specific area
+Duncanson2023_fire2019 = mask(Duncanson2023_firecrop, Fire2019)
+calculate_global_stats(Duncanson2023_fire2019)
+
+ggplot(data = Duncanson2023_fire2019)+
+  geom_spatraster(data = Duncanson2023_fire2019) +
+  labs(title = "Fire Disturbance 2019: Duncanson et al. 2023") +
+  theme_light()+
+  scale_fill_viridis(na.value="white", 
+                     limits=c(0,400), 
+                     name = "Biomass \n(Mg of C \nper ha)\n") +
+  scale_y_continuous(breaks = c(64.6, 64.65, 64.7, 64.75))+
+  scale_x_continuous(breaks = c(-151.6, -151.5, -151.4, -151.3)) +
+  coord_sf(expand=FALSE) +
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank())
+```
+
+# Duncanson2023 et. al Harvest Regions
+```{r}
+# Look at the 2019 fire for Duncanson
+Duncanson_harvestcrop = crop(Duncanson2023_4326, ext(Harvest2019))
+Duncanson2023_harvest2019 = mask(Duncanson_harvestcrop, Harvest2019)
+calculate_global_stats(Duncanson2023_harvest2019)
+
+ggplot(data=Duncanson_harvestcrop)+
+  geom_spatraster(data=Duncanson_harvestcrop) +
+  geom_sf(data = Harvest2019, fill="transparent", color = "#dc28bc", linewidth = 1.25)+
+  labs(title = "Timber Harvest 2019: Duncanson et al. 2023") +
+  theme_light()+
+  xlim(-123.53, -123.475)+
+  ylim(54.32, 54.353)+
+  scale_fill_viridis(na.value="white", 
+                     #limits=c(0,1000), 
+                     name = "Biomass \n(Mg of C \nper ha)\n") +
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank())+
+  coord_sf(expand=FALSE)
+
+```
+
+
+#Guindon et al. 2023: Footprint 
+```{r}
+# Read in the data
+Guindon2023 = rast(paste(wkdir, "Guindon2023/Guindon2023_102001.tif", sep="/"))
+# Pull the footprint
+GuindonFootprint = read_sf(paste(wkdir, "Guindon2023/Guindon2023_FootprintGeom.shp", sep="/"))
+GuindonFootprint = st_transform(GuindonFootprint, "ESRI:102001")
+
+ggplot(data = GuindonFootprint)+
+  geom_sf(data = countries_102001, fill = "#e5e5e5", color= "grey75")+
+  geom_sf(data = GuindonFootprint,fill = "grey30", color = "transparent") +
+  #geom_sf(data = studyarea, linewidth = 0.5, aes(color = Region),  fill= "transparent")+
+  #scale_color_manual(name = "Study Domain",
+  #  values = c("Core Region" = "#93dfb8",
+  #              "Extended Region" = "#9aceeb")) +
+  labs(title = "Footprint: Guindon et al. (2023)") +
+  theme_light()+ 
+  xlim(-4422954.60958742, 3092700.05788824)+
+  ylim(292910.849904229, 4811663.47254589)+
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(), 
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank())
+
+```
+
+#Guindon et al. 2023: Great Slave Lake Study Areas
+```{r}
+Guindon2023_4326 = rast(paste(wkdir, "Guindon2023/Guindon2023_4326.tif", sep="/"))
+Guindon2023_GSL = crop(Guindon2023_4326, GSL_ext)
+
+ggplot(data=Guindon2023_GSL)+
+  geom_spatraster(data=Guindon2023_GSL) +
+  labs(title = "Great Slave Lake: Guindon et al. 2023") +
+  theme_light()+
+  scale_fill_viridis(na.value="white", 
+                     limits=c(0,150), 
+                     name = "Biomass \n(Mg of C \nper ha)\n") +
+  scale_y_continuous(breaks = c(61.3, 61.4, 61.5, 61.6))+
+  scale_x_continuous(breaks = c(-117.6, -117.4, -117.2, -117.0)) +
+  coord_sf(expand=FALSE) +
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank())
+
+calculate_global_stats(Guindon2023_GSL)
+```
+
+#Guindon et al. 2023: Timber Harvest Areas
+```{r}
+Guindon2023_Harvest = crop(Guindon2023_4326, ext(Harvest2019))
+Guindon2023_Harvest2019 = mask(Guindon2023_Harvest, Harvest2019)
+
+ggplot(data=Guindon2023_Harvest)+
+  geom_spatraster(data=Guindon2023_Harvest) +
+  geom_sf(data = Harvest2019, fill="transparent", color = "#dc28bc", linewidth = 1.25)+
+  labs(title = "Timber Harvest 2019: Guindon et al. 2023") +
+  theme_light()+
+  xlim(-123.53, -123.475)+
+  ylim(54.32, 54.353)+
+  scale_fill_viridis(na.value="white", 
+                     limits=c(0,250), 
+                     name = "Biomass \n(Mg of C \nper ha)\n") +
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank())+
+  coord_sf(expand=FALSE)
+
+calculate_global_stats(Guindon2023_Harvest2019)
+```
+
+#Kraatz et al. 2022: Setup
+```{r}
+Kraatz2022 = rast(paste(wkdir, "Kraatz2022/Great_Slave_Lake_biomass_2017-2020.tif", sep="/"))
+Kraatz2022_4326 = terra::project(Kraatz2022, WGS84 <- "+init=EPSG:4326")
+Kraatz2022 = terra::project(Kraatz2022, "ESRI:102001")
+```
+
+#Kraatz et al. 2022: Footprint
+```{r}
+KraatzFootprint = read_sf(paste(wkdir, "Kraatz2022/Kraatzfootprint.shp", sep="/"))
+KraatzFootprint = st_transform(KraatzFootprint, "ESRI:102001")
+  
+ggplot(data = KraatzFootprint)+
+  geom_sf(data = countries_102001, fill = "#e5e5e5", color= "grey75")+
+  geom_sf(data = KraatzFootprint, fill = "grey30", color = "transparent") +
+  labs(title = "Footprint: Kraatz et al. (2022)") +
+  theme_light()+ 
+  xlim(-4422954.60958742, 3092700.05788824)+
+  ylim(292910.849904229, 4811663.47254589)+
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(), 
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank())
+
+```
+
+#Kraatz et al. 2022: Great Slave Lake Study Area
+```{r}
+Kraatz2022_4326  <- terra::project(Kraatz2022, WGS84 <- "+init=EPSG:4326")
+Kraatz2022_GSL = crop(Kraatz2022_4326, GSL_ext)
+
+ggplot(data = Kraatz2022_GSL)+
+  geom_spatraster(data = Kraatz2022_GSL) +
+  xlim(-117.7, -117.1)+
+  ylim(61.3, 61.6)+
+  labs(title = "Great Slave Lake: Kraatz et al. 2022") +
+  theme_light()+
+  scale_fill_viridis(na.value="white", 
+                     limits=c(0,150), 
+                     name = "Biomass \n(Mg of C \nper ha)\n") +
+  scale_y_continuous(breaks = c(61.3, 61.4, 61.5, 61.6))+
+  scale_x_continuous(breaks = c(-117.6, -117.4, -117.2, -117.0)) +
+  coord_sf(expand=FALSE) +
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank())
+
+calculate_global_stats(Kraatz2022_GSL)
+```
+
+
+#Matasci et al. 2018: Setup
+```{r}
+Matasci2018 <-rast(paste(wkdir, "Matasci2018/matasci_4326.tif", sep="/"))
+```
+
+#Matasci et al. 2018: Raster plot (maybe too big to run in full)
+```{r}
+ggplot(data = Matasci2018)+
+  geom_spatraster(data = Matasci2018) +
+  labs(title = "Matasci et al. 2020") +
+  theme_light()+
+  scale_fill_viridis(na.value="white", 
+                     limits=c(0,150), 
+                     name = "Biomass \n(Mg of C \nper ha)\n") +
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank())
+```
+
+#Matasci et al. 2018: Raster plot (courser spatial resolution 300x300m)
+```{r}
+Matasci2018_300 <-rast(paste(wkdir, "Matasci/matasci300.tif", sep="/"))
+Matasci2018_300 <- terra::project(Matasci2018_300, WGS84 <- "+init=EPSG:4326")
+
+ggplot(data = Matasci2018_300)+
+  geom_spatraster(data = Matasci2018_300) +
+  labs(title = "Matasci et al. 2020") +
+  theme_light()+
+  scale_fill_viridis(na.value="white", 
+                     #limits=c(0,150), 
+                     name = "Biomass \n(Mg of C \nper ha)\n") +
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank())
+```
+
+#Matasci et al. 2018: Footprint
+```{r}
+MatasciBoundaries = read_sf(paste(wkdir, "Matasci2018/matasciboundary.shp", sep="/"))
+MatasciBoundaries = st_transform(MatasciBoundaries, "ESRI:102001")
+MatasciBoundaries = st_intersection(MatasciBoundaries, AlaskaCanada_102001)
+
+ggplot(data = MatasciBoundaries) +
+ geom_sf(data = countries_102001, fill = "#e5e5e5", color= "grey75")+
+  geom_sf(data = MatasciBoundaries, fill = "grey30", color = "transparent") +
+  labs(title = "Footprint: Matasci et al. (2018)") +
+  theme_light()+
+  xlim(-4422954.60958742, 3092700.05788824)+
+  ylim(292910.849904229, 4811663.47254589)+
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(), 
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank())
+
+```
+
+#Matasci et al. 2018: Great Slave Lake Study Area
+```{r}
+Matasci2018_GSL = crop(Matasci2018, GSL_ext)
+
+ggplot(data = Matasci2018_GSL)+
+  geom_spatraster(data = Matasci2018_GSL) +
+  labs(title = "Great Slave Lake: Matasci et al. 2020") +
+  theme_light()+
+  scale_fill_viridis(na.value="white", 
+                     limits=c(0,alas150), 
+                     name = "Biomass \n(Mg of C \nper ha)\n") +
+  scale_y_continuous(breaks = c(61.3, 61.4, 61.5, 61.6))+
+  scale_x_continuous(breaks = c(-117.6, -117.4, -117.2, -117.0)) +
+  coord_sf(expand=FALSE) +
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank())
+
+calculate_global_stats(Matasci2018_GSL)
+```
+
+#Matasci et al. 2018: Timber Harvest Areas 2014
+```{r}
+# Calculate the 2014 statistics
+Matasci2018_harvestcrop = crop(Matasci2018, ext(Harvest2014))
+Matasci2018_harvest2014 = mask(Matasci2018_harvestcrop, Harvest2014)
+
+ggplot(data=Matasci2018_harvestcrop)+
+  geom_spatraster(data=Matasci2018_harvestcrop) +
+  geom_sf(data = Harvest2014, fill="transparent", color = "#dc28bc", linewidth = 1.25)+
+  labs(title = "Timber Harvest 2014: Matasci et al. 2018") +
+  theme_light()+
+  xlim(-124.02, -123.92)+
+  ylim(54.59, 54.65)+
+  scale_fill_viridis(na.value="white", 
+                     limits=c(0,300), 
+                     name = "Biomass \n(Mg of C \nper ha)\n") +
+
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank())+
+  coord_sf(expand=FALSE)
+
+calculate_global_stats(Matasci2018_harvest2014)
+```
+
+
+#Soto-Navarro et al. 2020: Setup
+```{r}
+SotoNavarro2020 <- rast(paste(wkdir, "Soto-Navarro2020/Soto2020_merge.tif", sep="/"))
+SotoNavarro2020_crop = crop(SotoNavarro2020, x)
+
+# This takes a long tme to run, so wrote output to a new file
+#crs((SotoNavarro2020_crop)) == crs(AlaskaCanada)
+#SotoNavarro2020_mask = mask(SotoNavarro2020_crop, AlaskaCanada)
+#SotoNavarro2020_mask  <- terra::project(SotoNavarro2020_mask, "ESRI:102001")
+#SotoNavarro2020_mask = mask(SotoNavarro2020_mask, ext(c(-4422954.60958742, 3092700.05788824,292910.849904229, 4811663.47254589)))
+#rf = writeRaster(SotoNavarro2020_mask, filename=file.path(wkdir, "Soto-Navarro2020/Soto2020_102001.tif"))
+
+SotoNavarro2020_mask <- rast(paste(wkdir, "Soto-Navarro2020/Soto2020_102001.tif", sep="/"))
+```
+
+#Soto-Navarro et al. 2020: Footprint 
+```{r}
+ggplot(data = countries) +
+  geom_sf(data = countries, fill= "grey30", color = "grey30") +
+  labs(title = "Footprint: Soto-Navarro et al. (2020)", 
+       caption= "CRS: WGS 84 (EPSG 4326)") +
+  theme_light() +
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.text.x = element_blank(), 
+    axis.text.y = element_blank()) +
+  coord_sf(expand=FALSE) 
+```
+
+#Soto-Navarro et al. 2020: Great Slave Lake Study Area
+```{r}
+SotoNavarro2020_GSL = crop(SotoNavarro2020_crop, GSL_ext)
+
+ggplot(data = SotoNavarro2020_GSL) +
+  geom_spatraster(data = SotoNavarro2020_GSL) +
+  labs(title = "Great Slave Lake: Soto-Navarro et al. 2020") +
+  theme_light() +
+  scale_fill_viridis(na.value="white", 
+                     limits=c(0,150), 
+                     name = "Biomass \n(Mg of C \nper ha)\n") +
+  scale_y_continuous(breaks = c(61.3, 61.4, 61.5, 61.6)) +
+  scale_x_continuous(breaks = c(-117.6, -117.4, -117.2, -117.0)) +
+  coord_sf(expand=FALSE) +
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank())
+
+calculate_global_stats(SotoNavarro2020_GSL)
+```
+
+#Soto-Navarro et al. 2020: Fire Disturbance 
+```{r}
+# Calculate for 2009 fire
+SotoNavarro2020_firecrop = crop(SotoNavarro2020_crop, Fire2009_ext)
+SotoNavarro2020_fire2009 = mask(SotoNavarro2020_firecrop, Fire2009)
+
+ggplot(data = SotoNavarro2020_firecrop) +
+  geom_spatraster(data = SotoNavarro2020_firecrop) +
+  geom_sf(data = Fire2009, fill = "transparent", color = "#dc28bc", linewidth = 1.25) + # Outline for fire area
+  labs(title = "Fire Disturbance 2009: Soto-Navarro et al. 2020") +
+  theme_light() +
+  scale_fill_viridis(na.value="white", 
+                     limits=c(0,50), 
+                     name = "Biomass \n(Mg of C \nper ha)\n") +
+  scale_y_continuous(breaks = c(64.35, 64.40, 64.45, 64.50, 64.55, 64.60))+
+  scale_x_continuous(breaks = c(-151.5, -151.4, -151.3, -151.2, -151.1, -151.0, -150.9)) +
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5), 
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  coord_sf(expand=FALSE)
+
+calculate_global_stats(SotoNavarro2020_fire2009)
+```
+
+#Soto-Navarro et al. 2020: Harvest Area
+```{r}
+# Calculate the 2009 statistics
+SotoNavarro2020_harvestcrop = crop(SotoNavarro2020_crop, ext(Harvest2009))
+SotoNavarro2020_harvest2009 = mask(SotoNavarro2020_harvestcrop, Harvest2009)
+
+ggplot(data=SotoNavarro2020_harvestcrop)+
+  geom_spatraster(data=SotoNavarro2020_harvestcrop) +
+  geom_sf(data = Harvest2009, fill="transparent", color = "#dc28bc", linewidth = 1.25)+
+  labs(title = "Timber Harvest 2009: Soto-Navarro et al. 2020") +
+  theme_light()+
+  xlim(-123.347, -123.26)+
+  ylim(54.533, 54.577)+
+  scale_fill_viridis(na.value="white", 
+                     limits=c(0,150), 
+                     name = "Biomass \n(Mg of C \nper ha)\n") +
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank())+
+  coord_sf(expand=FALSE)
+
+calculate_global_stats(SotoNavarro2020_harvest2009)
+```
+
+#Spawn and Gibbs 2020: Setup 
+```{r}
+SpawnGibbs2020 = rast(paste(wkdir, "SpawnGibbs2020/aboveground_biomass_carbon_2010.tif", sep="/"))
+SpawnGibbs2020_crop = crop(SpawnGibbs2020, x)
+
+# This took a long time to run, so wrote to a new file
+#crs((SpawnGibbs2020_crop))==crs(AlaskaCanada)
+#SpawnGibbs2020_mask = mask(SpawnGibbs2020_crop, AlaskaCanada)
+#SpawnGibbs2020_mask <- terra::project(SpawnGibbs2020_mask, "ESRI:102001")
+#SpawnGibbs2020_mask = mask(SpawnGibbs2020_mask, ext(c(-4422954.60958742, 3092700.05788824,292910.849904229, 4811663.47254589)))
+#rf = writeRaster(SpawnGibbs2020_mask, filename=file.path(wkdir, "SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif"))
+
+SpawnGibbs2020_mask <- rast(paste(wkdir, "SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif", sep="/"))
+```
+
+#Spawn and Gibbs 2020: Footprint 
+```{r}
+ggplot(data = countries)+
+  geom_sf(data = countries, fill= "grey30", color = "grey30")+
+  labs(title = "Footprint: Spawn & Gibbs (2020)", 
+       caption = "CRS: WGS 84 (EPSG 4326)") +
+  theme_light()+
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.text.x = element_blank(),    
+    axis.text.y = element_blank()) +
+  coord_sf(expand=FALSE) 
+```
+
+#Spawn and Gibbs 2020: Great Slave Lake Study Area
+```{r}
+SpawnGibbs2020_GSL = crop(SpawnGibbs2020_crop, GSL_ext)
+
+ggplot(data=SpawnGibbs2020_GSL) +
+  geom_spatraster(data=SpawnGibbs2020_GSL) +
+  labs(title = "Great Slave Lake: Spawn and Gibbs 2020") +
+  theme_light() +
+  scale_fill_viridis(na.value="white", 
+                     limits=c(0,150), 
+                     name = "Biomass \n(Mg of C \nper ha)\n") +
+  scale_y_continuous(breaks = c(61.3, 61.4, 61.5, 61.6)) +
+  scale_x_continuous(breaks = c(-117.6, -117.4, -117.2, -117.0)) +
+  coord_sf(expand=FALSE) +
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank())
+
+calculate_global_stats(SpawnGibbs2020_GSL)
+```
+
+#Spawn and Gibbs: 2009 Fire Disturbance 
+```{r}
+SpawnGibbs2020_firecrop = crop(SpawnGibbs2020_crop, Fire2009_ext)
+SpawnGibbs2020_fire2009 = mask(SpawnGibbs2020_firecrop, Fire2009)
+
+ggplot() +
+  geom_spatraster(data = SpawnGibbs2020_firecrop, show.legend = TRUE) +  # Explicitly define data source
+  geom_sf(data = Fire2009, fill = "transparent", color = "#dc28bc", linewidth = 1.25) + # Outline for fire area
+  labs(title = "Fire Disturbance 2009: Soto-Navarro et al. 2020") +
+  theme_light() +
+  scale_fill_viridis(na.value = "white", 
+                     limits = c(0, 300), 
+                     name = "Biomass \n(Mg of C \nper ha)\n") +
+  scale_y_continuous(breaks = c(64.35, 64.40, 64.45, 64.50, 64.55, 64.60)) +
+  scale_x_continuous(breaks = c(-151.5, -151.4, -151.3, -151.2, -151.1, -151.0, -150.9)) +
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5), 
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  coord_sf(expand = FALSE)
+
+calculate_global_stats(SpawnGibbs2020_fire2009)
+```
+
+#Spawn and Gibbs: 2009 Timber Harvest Area
+```{r}
+SpawnGibbs2020_Harvest  = crop(SpawnGibbs2020_crop, ext(c(-123.80, -123.30, 54.14, 55.17)))
+Harvest_ext= ext(c(-123.5, -123.2,54.4, 54.6))
+SpawnGibbs2020_Harvest = crop(SpawnGibbs2020_crop, Harvest_ext)
+
+ggplot(data=SpawnGibbs2020_Harvest)+
+  geom_spatraster(data=SpawnGibbs2020_Harvest) +
+    geom_sf(data = Harvest2009, fill="transparent", color = "#dc28bc", linewidth = 1.25)+
+  labs(title = "Timber Harvest 2009: Spawn & Gibbs et al. 2020") +
+  theme_light() +
+  xlim(-123.346, -123.26)+
+  ylim(54.533, 54.576)+
+  scale_fill_viridis(na.value="white", 
+                     limits=c(0,1100), 
+                     name = "Biomass \n(Mg of C \nper ha)\n") +
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank())+
+  coord_sf(expand=FALSE) 
+
+SpawnGibbs2020_harvestcrop = crop(SpawnGibbs2020_crop, ext(Harvest2009))
+SpawnGibbs2020_harvest2009 = mask(SpawnGibbs2020_harvestcrop, Harvest2009)
+calculate_global_stats(SpawnGibbs2020_harvest2009)
+```
+
+#Wang et al. 2020: Setup
+```{r}
+Wang2020 = rast(paste(wkdir, "Wang2020/Wang2020_31_merge4326.tif", sep="/"))
+#Wang2020  <- terra::project(Wang2020, WGS84 <- "+init=EPSG:4326")
+Wang2020 = Wang2020*0.01 # Needed to get into the correct values
+```
+
+#Wang et al. 2020: Footprint
+```{r}
+WangBoundaries = read_sf(paste(wkdir, "Wang2020/WangFootprint.shp", sep="/"))
+WangBoundaries = st_transform(WangBoundaries, "ESRI:102001")
+
+ggplot(data = WangBoundaries)+
+  geom_sf(data = countries_102001, fill = "#e5e5e5", color= "grey75")+
+  geom_sf(data = WangBoundaries, fill = "grey30", color = "transparent") +
+  labs(title = "Footprint: Wang et al. (2020)") +
+  theme_light()+
+  xlim(-4422954.60958742, 3092700.05788824)+
+  ylim(292910.849904229, 4811663.47254589)+
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(), 
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank())
+
+```
+
+# Wang et al. 2020: Raster plot
+```{r}
+ggplot(data = Wang2020)+
+  geom_spatraster(data = Wang2020) +
+  labs(title = "Wang et al. 2020") +
+  theme_light()+
+  scale_fill_viridis(na.value="white", 
+                     #limits=c(0,150), 
+                     name = "Biomass \n(Mg of C \nper ha)\n") +
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank())
+```
+
+#Wang et al. 2020: Great Slave Lake 
+```{r}
+Wang2020_Bh12v11 = rast(paste(wkdir, "Wang2020/ABoVE_AGB_Bh12v11.tif", sep="/"))
+Wang2020_Bh12v11_1 = Wang2020_Bh12v11[[1]]
+Wang2020_Bh12v11_1  <- terra::project(Wang2020_Bh12v11_1, WGS84 <- "+init=EPSG:4326")
+Wang2020_GSL = crop(Wang2020_Bh12v11_1, GSL_ext)
+Wang2020_GSL = Wang2020_GSL*0.01
+
+ggplot(data=Wang2020_GSL)+
+  geom_spatraster(data=Wang2020_GSL) +
+  labs(title = "Great Slave Lake: Wang et al. 2020") +
+  theme_light()+
+  scale_fill_viridis(na.value="white", 
+                     limits=c(0,150), 
+                     name = "Biomass \n(Mg of C \nper ha)\n") +
+  scale_y_continuous(breaks = c(61.3, 61.4, 61.5, 61.6))+
+  scale_x_continuous(breaks = c(-117.6, -117.4, -117.2, -117.0)) +
+  coord_sf(expand=FALSE) +
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank())
+
+calculate_global_stats(Wang2020_GSL)
+```
+
+#Wang 2013 Fire study area
+```{r}
+Wang2020_firecrop = crop(Wang2020, Fire2013_ext)
+Wang2020_fire2013 = mask(Wang2020_firecrop, Fire2013)
+
+ggplot() +
+  geom_spatraster(data = Wang2020_firecrop, show.legend = TRUE) +  # Explicitly define data source
+  geom_sf(data = Fire2013, fill = "transparent", color = "#dc28bc", linewidth = 1.25) + # Outline for fire area
+  labs(title = "Fire Disturbance 2013: Wang et al. 2020") +
+  theme_light() +
+  scale_fill_viridis(na.value = "white", 
+                     limits = c(0, 150), 
+                     name = "Biomass \n(Mg of C \nper ha)\n") +
+  scale_y_continuous(breaks = c(63.95, 64.0, 64.45, 64.05, 64.1))+
+  scale_x_continuous(breaks = c(-152.2, -152.1, -152, -151.9, -151.8)) +
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5), 
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  coord_sf(expand = FALSE)
+
+calculate_global_stats(Wang2020_fire2013)
+```
+
+
+# Wang 2013 Harvest Area
+```{r}
+Wang2020_harvestcrop = crop(Wang2020, ext(Harvest2013))
+Wang2020_harvest2013 = mask(Wang2020_harvestcrop, Harvest2013)
+
+ggplot(data=Wang2020_harvestcrop)+
+  geom_spatraster(data=Wang2020_harvestcrop) +
+    geom_sf(data = Harvest2013, fill="transparent", color = "#dc28bc", linewidth = 1.25)+
+  labs(title = "Timber Harvest 2013: Wang et al. 2020") +
+  theme_light() +
+  xlim(-124.28, -124.15)+
+  ylim(54.701, 54.77)+
+  scale_fill_viridis(na.value="white", 
+                     limits=c(0,250), 
+                     name = "Biomass \n(Mg of C \nper ha)\n") +
+  #scale_y_continuous(breaks = c(61.3, 61.4, 61.5, 61.6))+
+  #scale_x_continuous(breaks = c(-117.7, -117.5, -117.3, -117.1)) +
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank())+
+  coord_sf(expand=FALSE)
+
+calculate_global_stats(Wang2020_harvest2013)
+```
+
+#Xu et al. 2021: Setup
+```{r}
+Xu2021 = stack(paste(wkdir, "Xu2021/test10a_cd_ab_pred_corr_2000_2019_v2.tif", sep="/"))
+Xu2021_20=Xu2021[[20]]
+crs((Xu2021_20))
+Xu2021_20 = rast(Xu2021_20)
+Xu2021_20_4326  <- terra::project(Xu2021_20, WGS84 <- "+init=EPSG:4326")
+Xu2021_crop = crop(Xu2021_20, x)
+crs((Xu2021_crop))==crs(AlaskaCanada)
+Xu2021_mask = mask(Xu2021_crop, AlaskaCanada)
+plot(Xu2021_mask)
+
+#ESRI 102001 projection 
+Xu2021_102001 = stack(paste(wkdir, "Xu2021/Xu2021_102001.tif", sep="/"))
+Xu2021_102001=Xu2021_102001[[20]]
+crs((Xu2021_102001))
+Xu2021_102001 = rast(Xu2021_102001)
+crs((Xu2021_102001))==crs(AlaskaCanada_102001)
+Xu2021_102001 = mask(Xu2021_102001, AlaskaCanada_102001)
+```
+
+#Xu et al. 2021: Footprint 
+```{r}
+ggplot(data = countries)+
+  geom_sf(data = countries, fill= "grey30", color = "grey30")+
+  labs(title = "Footprint: Xu et al. (2021)", 
+       caption = "CRS: WGS 84 (EPSG 4326)") +
+  theme_light()+
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.text.x = element_blank(), 
+    axis.text.y = element_blank()) +
+  coord_sf(expand=FALSE) 
+
+```
+
+#Xu et al. 2021: Great Slave Lake Study Area
+```{r}
+Xu2021_GSL = crop(Xu2021_20_4326, GSL_ext)
+
+ggplot(data = Xu2021_GSL)+
+  geom_spatraster(data = Xu2021_GSL) +
+  labs(title = "Great Slave Lake: Xu et al. 2021") +
+  theme_light()+
+  scale_fill_viridis(na.value="white", 
+                     limits=c(0,150), 
+                     name = "Biomass \n(Mg of C \nper ha)\n") +
+  scale_y_continuous(breaks = c(61.3, 61.4, 61.5, 61.6))+
+  scale_x_continuous(breaks = c(-117.6, -117.4, -117.2, -117.0)) +
+  coord_sf(expand=FALSE) +
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank())
+
+calculate_global_stats(Xu2021_GSL)
+```
+
+#Xu et al. 2021: Fire Disturbance 
+
+```{r}
+Xu2021_firecrop = crop(Xu2021_20_4326, Fire2018_ext)
+Xu2021_fire2018 = mask(Xu2021_firecrop, Fire2018)
+
+ggplot(data = Xu2021_firecrop) +
+  geom_spatraster(data = Xu2021_firecrop) +
+  geom_sf(data = Fire2018, fill="transparent", color = "#dc28bc", linewidth = 1.25)+
+  labs(title = "Fire Disturbance 2018: Xu et al. 2021") +
+  theme_light() +
+  scale_fill_viridis(na.value="white", 
+                     limits=c(0,150), 
+                     name = "Biomass \n(Mg of C \nper ha)\n") +
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank())+
+  coord_sf(expand=FALSE)
+
+calculate_global_stats(Xu2021_fire2018)
+```
+
+#Xu et al. 2021: Timber Harvest Area
+```{r}
+Xu2021_harvestcrop = crop(Xu2021_20_4326, ext(Harvest2018))
+Xu2021_harvest2018 = mask(Xu2021_harvestcrop, Harvest2018)
+
+ggplot(data=Xu2021_harvestcrop)+
+  geom_spatraster(data=Xu2021_harvestcrop) +
+    geom_sf(data = Harvest2018, fill="transparent", color = "#dc28bc", linewidth = 1.25)+
+  labs(title = "Timber Harvest 2018: Xu et al. 2021") +
+  theme_light() +
+  xlim(-123.70, -123.50)+
+  ylim(54.50, 54.60)+
+  scale_fill_viridis(na.value="white", 
+                     limits=c(0,1000), 
+                     name = "Biomass \n(Mg of C \nper ha)\n") +
+  theme(plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank())+
+  coord_sf(expand=FALSE)
+
+calculate_global_stats(Xu2021_harvest2018)
+```
