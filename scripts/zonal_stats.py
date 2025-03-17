@@ -38,25 +38,35 @@ def process_zone(zone_row, src, file_type, coverage_ratio):
     elif file_type == 'EPA2':
         zone_name = zone_row['NA_L2KEY']
 
-    # Mask raster by geometry
-    with rasterio.open(src) as file:
-        file_bounds = box(*file.bounds)
-        # Check for intersection with the zone shape
-        if not file_bounds.intersects(box(*geometry.bounds)):
-            print(f"Shape {zone_name} does not intersect raster, skipping.")
-            return (zone_name, None, None, None, None)
-        try:
-            # Get a mask of the zone shape area from the original raster
-            out_image, out_transform = mask(file, [geometry], crop=True)
-            no_data_value = file.nodata
-            pixel_area = file.res[0] * file.res[1]
-        # There was an error in processing
-        except ValueError as e:
-            print(f"Error processing {zone_name}: {e}")
-            return (zone_name, None, None, None, None)
+    try: 
+        # Mask raster by geometry
+        with rasterio.open(src) as file:
+            file_bounds = box(*file.bounds)
+            # Check for intersection with the zone shape
+            if not file_bounds.intersects(box(*geometry.bounds)):
+                print(f"Shape {zone_name} does not intersect raster, skipping.")
+                return (zone_name, None, None, None, None, None)
+            try:
+                # Get a mask of the zone shape area from the original raster
+                out_image, out_transform = mask(file, [geometry], crop=True)
+                no_data_value = file.nodata
+                pixel_area = file.res[0] * file.res[1]
+            # There was an error in processing
+            except ValueError as e:
+                print(f"Error processing {zone_name}: {e}")
+                return (zone_name, None, None, None, None, None)
+    except Exception as e:
+        print(f"Failed to open raster {src}: {e}")
 
     # Flatten, remove NoData, calculate percentage of shape covered by valid data
-    out_image = out_image.flatten()
+    if out_image.shape[0] > 1:  # If multi-band
+        print("Multiband dataset")
+        if src.split('/')[-2] == 'Duncanson2023_new' or src.split('/')[-2] == 'Xu2021':
+            out_image = out_image[0].flatten() # Assume get first row
+        else:
+            out_image = out_image[-1].flatten() # Get the last row
+    else:
+        out_image = out_image.flatten()
     if np.isnan(no_data_value):
         valid_data = out_image[~np.isnan(out_image)]
     else:
@@ -67,15 +77,20 @@ def process_zone(zone_row, src, file_type, coverage_ratio):
     actual_cover = valid_area / geometry_area
 
     # Check if the raster actually covers the zone well
-    print(f"    The coverage area of {zone_name} is {actual_cover}")
+    if not np.isnan(actual_cover):
+        print(f"The coverage area of {zone_name} is {actual_cover}", flush=True)
+    else:
+        print(f"The coverage area of {zone_name} is NaN", flush=True)
+
+    #Check 
     if actual_cover >= float(coverage_ratio):
         # Calculate statistics
         mean = np.nanmean(valid_data)
         median = np.nanmedian(valid_data)
         sum = np.nansum(valid_data)
         std = np.nanstd(valid_data)
-        return (zone_name, mean, median, sum, std)
-    return (zone_name, None, None, None, None)
+        return (zone_name, mean, median, sum, std, actual_cover)
+    return (zone_name, None, None, None, None, None)
 
 def calculate_zonal_stats_parallel(raster_file, shapefile, output_file, file_type, coverage_ratio):
     """
@@ -93,16 +108,18 @@ def calculate_zonal_stats_parallel(raster_file, shapefile, output_file, file_typ
     """
     print(f"Looking at dataset: {raster_file} with file type {file_type}")
     shapes = gpd.read_file(shapefile)
+    print(f"Shapefile CRS: {shapes.crs}")
     
     # Use multiprocessing to process zones in parallel
-    with Pool(processes=8) as pool:
+    with Pool(processes=4) as pool:
         results = pool.starmap(process_zone, [(row, raster_file, file_type, coverage_ratio) for _, row in shapes.iterrows()])
 
     # Write results to a file
+    print(f"Writing results to file: {output_file}")
     with open(output_file, 'w') as f:
-        f.write("Zone, Mean, Median, Sum, Std \n")
+        f.write("Zone, Mean, Median, Sum, Std, Coverage \n")
         for result in results:
-            f.write(f"{result[0]}, {result[1]}, {result[2]}, {result[3]}, {result[4]} \n")
+            f.write(f"{result[0]}, {result[1]}, {result[2]}, {result[3]}, {result[4]}, {result[5]} \n")
 
 if __name__ == "__main__":
 
@@ -115,7 +132,7 @@ if __name__ == "__main__":
 
     # Check which type of script to run
     if args.script_type == 'EPA2':
-        shapefile = "/projects/arctic/share/ABoVE_Biomass/OtherSpatialDatasets/EPA_ecoregion_lvl2_clipped_102001.shp"
+        shapefile = "/projects/arctic/share/ABoVE_Biomass/OtherSpatialDatasets/EPA_ecoregion_lvl2_102001.shp"
     elif args.script_type == 'Canada':
         shapefile = "/projects/arctic/share/ABoVE_Biomass/OtherSpatialDatasets/CanadaAlaska_Boundaries_102001.shp"
     
@@ -123,7 +140,8 @@ if __name__ == "__main__":
     directory = os.path.dirname(args.infile)
     folder_name = os.path.basename(directory).split('.')[0]
     coverage_ratio_percent = int(args.coverage_ratio * 100)
-    output_file = f"zonal_stats/zonal_stats_{args.script_type}_{folder_name}_{coverage_ratio_percent}.txt"
+    mask_type = os.path.basename(infile).split('_')[-1].split('.')[0]
+    output_file = f"zonal_stats/zonal_stats_{args.script_type}_{folder_name}_{mask_type}_{coverage_ratio_percent}.txt"
 
     # Run parallel zonal stats and write to file
     calculate_zonal_stats_parallel(args.infile, shapefile, output_file, args.script_type, args.coverage_ratio)
