@@ -77,13 +77,13 @@ def create_na_mask(type, directory):
     
     File Paths:
         - "Canada":
-            - `../Duncanson2023_new/Duncanson2023_102001.tif
+            - `../Duncanson2025/Duncanson2025_102001.tif
             - `../Guindon2023/Guindon2023_102001.tif`
             - `../Matasci2018/matasci_102001.tif`
             - `../Soto-Navarro2020/Soto2020_102001.tif`
             - `../SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif`
         - "ABoVE":
-            - `../Duncanson2023_new/Duncanson2023_102001.tif`
+            - `../Duncanson2025/Duncanson2025_102001.tif`
             - `../Soto-Navarro2020/Soto2020_102001.tif`
             - `../SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif`
             - `../Wang2020/Wang102001.tif`
@@ -95,15 +95,14 @@ def create_na_mask(type, directory):
             # Wang: Doesnt cover that much of the area
             # Xu: Resolution is jsut too high
         # These are the file paths we should use for the Canada region
-        file_paths = [f"{directory}/Duncanson2023_new/Duncanson2023_102001.tif", 
+        file_paths = [f"{directory}/Duncanson2025/Duncanson2025_BigTIFF.tif", 
                         f"{directory}/Guindon2023/Guindon2023_102001.tif",
-                        f"{directory}/Matasci2018/matasci_102001.tif",
                         f"{directory}/Soto-Navarro2020/Soto2020_102001.tif",
                         f"{directory}/SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif"]
         # Calculate common bound based on where they all overlap
     elif type == "ABoVE":
         # These are the file paths we should use for the ABoVE region
-        file_paths = [f"{directory}/Duncanson2023_new/Duncanson2023_102001.tif", 
+        file_paths = [f"{directory}/Duncanson2025/Duncanson2025_BigTIFF.tif", 
                         f"{directory}/Soto-Navarro2020/Soto2020_102001.tif",
                       f"{directory}/SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif",
                       f"{directory}/Wang2020/Wang102001.tif"]

@@ -1,5 +1,0 @@
-/var/spool/slurm/slurmd/job15851936/slurm_script: line 10: /packages/anaconda3/2024.02/etc/profile.d/conda/sh: No such file or directory
-NoData value is not set in /projects/arctic/share/ABoVE_Biomass/Xu2021/Xu2021_102001.tif. Defaulting to 0.0.
-Masked dataset saved to: /projects/arctic/share/ABoVE_Biomass/Xu2021/Xu2021_102001_masked_Canada.tif
-NoData value is not set in /projects/arctic/share/ABoVE_Biomass/Xu2021/Xu2021_102001.tif. Defaulting to 0.0.
-Masked dataset saved to: /projects/arctic/share/ABoVE_Biomass/Xu2021/Xu2021_102001_masked_ABoVE.tif

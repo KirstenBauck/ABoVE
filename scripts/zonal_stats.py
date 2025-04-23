@@ -61,7 +61,7 @@ def process_zone(zone_row, src, file_type, coverage_ratio):
     # Flatten, remove NoData, calculate percentage of shape covered by valid data
     if out_image.shape[0] > 1:  # If multi-band
         print("Multiband dataset")
-        if src.split('/')[-2] == 'Duncanson2023_new' or src.split('/')[-2] == 'Xu2021':
+        if src.split('/')[-2] == 'Duncanson2025' or src.split('/')[-2] == 'Xu2021':
             out_image = out_image[0].flatten() # Assume get first row
         else:
             out_image = out_image[-1].flatten() # Get the last row
@@ -140,7 +140,7 @@ if __name__ == "__main__":
     directory = os.path.dirname(args.infile)
     folder_name = os.path.basename(directory).split('.')[0]
     coverage_ratio_percent = int(args.coverage_ratio * 100)
-    mask_type = os.path.basename(infile).split('_')[-1].split('.')[0]
+    mask_type = os.path.basename(args.infile).split('_')[-1].split('.')[0]
     output_file = f"zonal_stats/zonal_stats_{args.script_type}_{folder_name}_{mask_type}_{coverage_ratio_percent}.txt"
 
     # Run parallel zonal stats and write to file

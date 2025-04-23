@@ -13,6 +13,7 @@ def apply_na_mask(dataset_path, mask_path, name):
     Args:
         dataset_path (str): Path to dataset to apply common mask to (should be of type `.tif`)
         mask_path (str): Path to common NA mask (should be of type `.tif`)
+        name (str): Name of which type of mask was applied
     """
     with rasterio.open(dataset_path) as src:
         # Read the dataset metadata
@@ -22,13 +23,13 @@ def apply_na_mask(dataset_path, mask_path, name):
         profile = src.profile
 
         #This is just for Duncanson to ensure proper processing
-        if os.path.basename(dataset_path) == "Duncanson2023_BigTIFF.tif"
+        if os.path.basename(dataset_path) == "Duncanson2025_BigTIFF.tif":
             profile.update({'BIGTIFF': 'YES'})
             profile.update({'tiled': True})
 
         # Ensure the dataset is float and update the NoData value
         if np.isnan(nodata):
-            print(f"NoData value is not set in {dataset_path}. Defaulting to 0.0.")
+            print(f"NoData value is nan in {dataset_path}. Defaulting to 0.0.")
             nodata = 0.0
             profile.update({'nodata': 0.0, 'dtype': rasterio.float32})
         else:
@@ -97,19 +98,16 @@ if __name__ == "__main__":
     # Mask paths, made from `submit_na_mask.sh`
     canada_mask = f"{directory}/OtherSpatialDatasets/CommonNA_Canada_Mask.tif"
     above_mask = f"{directory}/OtherSpatialDatasets/CommonNA_ABoVE_Mask.tif"
+    combined_mask = f"{directory}/OtherSpatialDatasets/Combined_Mask.tif"
 
     # Datasets to apply the masks to
     canada_datasets = [f"{directory}/Guindon2023/Guindon2023_102001.tif",
-                        f"{directory}/Matasci2018/matasci_102001_bigtiff.tif",
-                        f"{directory}/Duncanson2023_new/Duncanson2023_BigTIFF.tif",
-                        f"{directory}/Soto-Navarro2020/Soto2020_102001.tif",
-                        f"{directory}/SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif",
-                        f"{directory}/Xu2021/Xu2021_102001.tif"]
-    above_datasets =[ f"{directory}/Soto-Navarro2020/Soto2020_102001.tif",
-                        f"{directory}/SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif",
-                        f"{directory}/Duncanson2023_new/Duncanson2023_BigTIFF.tif",
-                        f"{directory}/Wang2020/Wang102001.tif",
-                        f"{directory}/Xu2021/Xu2021_102001.tif"]
+                        f"{directory}/Matasci2018/matasci_102001_bigtiff.tif"]
+    above_datasets =[ f"{directory}/Wang2020/Wang102001.tif"]
+    combined_datasets = [ f"{directory}/Soto-Navarro2020/Soto2020_102001.tif",
+                            f"{directory}/SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif",
+                            f"{directory}/Duncanson2025/Duncanson2025_BigTIFF.tif",
+                            f"{directory}/Xu2021/Xu2021_102001.tif"]
 
     # Apply ABoVE mask to ABoVE datasets
     for dataset in above_datasets:
@@ -118,3 +116,7 @@ if __name__ == "__main__":
     # Apply Canada mask to Canada datasets
     for dataset in canada_datasets:
         apply_na_mask(dataset, canada_mask, 'Canada')
+    
+    # Apply both masks to datasets where they both apply
+    for dataset in combined_datasets:
+        apply_na_mask(dataset, combined_mask, 'Combined')
