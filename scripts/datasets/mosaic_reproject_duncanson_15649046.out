@@ -2,14 +2,14 @@
 Input file size is 177000, 204000
 0...10...20...30...40...50...60...70...80...90...100 - done.
 Creating output file that is 357518P x 116245L.
-Processing /projects/arctic/share/ABoVE_Biomass/Duncanson2023_new/Duncanson2023_ABoVE_merged.tif [1/1] : 0Using internal nodata values (e.g. nan) for image /projects/arctic/share/ABoVE_Biomass/Duncanson2023_new/Duncanson2023_ABoVE_merged.tif.
-Copying nodata values from source /projects/arctic/share/ABoVE_Biomass/Duncanson2023_new/Duncanson2023_ABoVE_merged.tif to destination /projects/arctic/share/ABoVE_Biomass/Duncanson2023_new/Duncanson2023_epsg4326.tif.
+Processing /projects/arctic/share/ABoVE_Biomass/Duncanson2025/Duncanson2023_ABoVE_merged.tif [1/1] : 0Using internal nodata values (e.g. nan) for image /projects/arctic/share/ABoVE_Biomass/Duncanson2025/Duncanson2023_ABoVE_merged.tif.
+Copying nodata values from source /projects/arctic/share/ABoVE_Biomass/Duncanson2025/Duncanson2023_ABoVE_merged.tif to destination /projects/arctic/share/ABoVE_Biomass/Duncanson2025/Duncanson2025_epsg4326.tif.
 ...10...20...30...40...50...60...70...80...90...100 - done.
 Input file size is 357518, 116245
 Creating output file that is 346604P x 208648L.
-Processing /projects/arctic/share/ABoVE_Biomass/Duncanson2023_new/subset_esri.vrt [1/1] : 0ERROR 1: Too many points (525 out of 529) failed to transform, unable to compute output bounds.
+Processing /projects/arctic/share/ABoVE_Biomass/Duncanson2025/subset_esri.vrt [1/1] : 0ERROR 1: Too many points (525 out of 529) failed to transform, unable to compute output bounds.
 Warning 1: Unable to compute source region for output window 194964,0,21663,13040, skipping.
-Using internal nodata values (e.g. nan) for image /projects/arctic/share/ABoVE_Biomass/Duncanson2023_new/subset_esri.vrt.
+Using internal nodata values (e.g. nan) for image /projects/arctic/share/ABoVE_Biomass/Duncanson2025/subset_esri.vrt.
 ...10...20...30...40...50...60...70...80...90...100 - done.
 Input file size is 346604, 208648
 0...10...20...30...40...50...60...70...80...90...100 - done.

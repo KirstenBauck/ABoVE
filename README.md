@@ -14,8 +14,23 @@ Of the 7 different datasets, each masked out different things as no data. For ex
    
     - Kraatz: Covers a tiny area that would not be useful in creating the na mask
     - Xu: Resolution is too high (10,000m/pixel) compared to other datasets <-- A shape file extraction and analysis will be applied at resolution later on.
-2. Apply the Common NA Mask using `submit_apply_mask.sh`
-3. The Common NA Mask was applied to Xu using `submit_apply_xu_mask.sh`
+    - **Note:** There was problems with Matasci and Wang not having a defined data value, so I defined there data value using:
+    ```python
+        #filename = '/projects/arctic/share/ABoVE_Biomass/Matasci2018/matasci_102001_bigtiff.tif'
+        filename = "/projects/arctic/share/ABoVE_Biomass/Wang2020/Wang102001.tif"
+
+        nodata = 0.0
+        # open the file for editing
+        ras = gdal.Open(filename, GA_Update)
+        # loop through the image bands
+        for i in range(1, ras.RasterCount + 1):
+            # set the nodata value of the band
+            ras.GetRasterBand(i).SetNoDataValue(nodata)
+        # unlink the file object and save the results
+        ras = None
+    ```
+2. Make a combined NA mask using `submit_combine_masks.sh`
+3. Apply the Common NA Mask using `submit_apply_mask.sh`
 
 ## Calculate Zonal Statistics
 Zonal statistics for the EPA level 2 regions and the Alaska/Canada proviences can be calculate using `sbatch submit_zonal_stats.sh <input_raster_file> <script_type> <coverage_ratio>` where:
