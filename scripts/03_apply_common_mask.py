@@ -2,7 +2,6 @@ import os
 import rasterio
 import numpy as np
 from rasterio.warp import reproject, Resampling
-from rasterio.mask import mask
 import traceback
 
 def apply_na_mask(dataset_path, mask_path, name):
@@ -17,13 +16,12 @@ def apply_na_mask(dataset_path, mask_path, name):
     """
     with rasterio.open(dataset_path) as src:
         # Read the dataset metadata
-        dataset_transform = src.transform
         dataset_crs = src.crs
         nodata = src.nodata if src.nodata is not None else np.nan
         profile = src.profile
 
-        #This is just for Duncanson to ensure proper processing
-        if os.path.basename(dataset_path) == "Duncanson2025_BigTIFF.tif":
+        # This is just for Duncanson to ensure proper processing
+        if os.path.basename(dataset_path) == "Duncanson2025_102001.tif":
             profile.update({'BIGTIFF': 'YES'})
             profile.update({'tiled': True})
 
@@ -106,7 +104,7 @@ if __name__ == "__main__":
     above_datasets =[ f"{directory}/Wang2020/Wang102001.tif"]
     combined_datasets = [ f"{directory}/Soto-Navarro2020/Soto2020_102001.tif",
                             f"{directory}/SpawnGibbs2020/SpawnGibbs2020_mask_102001.tif",
-                            f"{directory}/Duncanson2025/Duncanson2025_BigTIFF.tif",
+                            f"{directory}/Duncanson2025/Duncanson2025_102001.tif",
                             f"{directory}/Xu2021/Xu2021_102001.tif"]
 
     # Apply ABoVE mask to ABoVE datasets

@@ -1,0 +1,14 @@
+name: ABoVE
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python>=3.9
+  - numpy
+  - pandas
+  - rasterio
+  - seaborn
+  - geopandas
+  - matplotlib
+  - pip
