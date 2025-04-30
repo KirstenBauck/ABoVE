@@ -24,4 +24,4 @@ script_type=$2
 coverage_ratio=$3
 
 # Run the Python script with the provided arguments
-python3 zonal_stats.py --infile "$infile" --script_type "$script_type" --coverage_ratio $coverage_ratio
+python3 04_zonal_stats.py --infile "$infile" --script_type "$script_type" --coverage_ratio $coverage_ratio

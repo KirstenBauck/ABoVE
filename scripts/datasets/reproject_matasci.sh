@@ -9,8 +9,13 @@
 # Load necessary modules
 module load gdal/3.7.2
 
+directory="/projects/arctic/share/ABoVE_Biomass"
+
 # Reproject
-gdalwarp -t_srs ESRI:102001 -co COMPRESS=LZW -co BIGTIFF=YES -co TILED=YES /projects/arctic/share/ABoVE_Biomass/Matasci2018/matasci_4326.tif /projects/arctic/share/ABoVE_Biomass/Matasci2018/matasci_102001.tif
+gdalwarp -t_srs ESRI:102001 -co COMPRESS=LZW -co BIGTIFF=YES -co TILED=YES \
+    "$directory/Matasci2018/matasci_4326.tif" \
+    "$directory/Matasci2018/matasci_102001.tif"
 
 # Make into a bigtif for better memory
-gdal_translate -of GTiff -co BIGTIFF=YES /projects/arctic/share/ABoVE_Biomass/Matasci2018/matasci_102001.tif /projects/arctic/share/ABoVE_Biomass/Matasci2018/matasci_102001_bigtiff.tif
+gdal_translate -of GTiff -co BIGTIFF=YES "$directory/Matasci2018/matasci_102001.tif" \
+ "$directory/Matasci2018/matasci_102001_bigtiff.tif"

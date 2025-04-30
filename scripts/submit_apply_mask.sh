@@ -12,4 +12,4 @@ module load anaconda3/2024.02
 conda activate ABoVE2024  
 
 # Run the Python script with the provided arguments
-python3 apply_common_mask.py
+python3 03_apply_common_mask.py

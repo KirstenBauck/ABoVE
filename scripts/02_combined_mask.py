@@ -67,9 +67,9 @@ def combine_masks(mask_path_1, mask_path_2, output_path):
 
     print(f"Combined mask saved to: {output_path}")
 
-# Example usage
-mask_path_1 = "/projects/arctic/share/ABoVE_Biomass/OtherSpatialDatasets/CommonNA_ABoVE_Mask.tif"
-mask_path_2 = "/projects/arctic/share/ABoVE_Biomass/OtherSpatialDatasets/CommonNA_Canada_Mask.tif"
-output_path = "/projects/arctic/share/ABoVE_Biomass/OtherSpatialDatasets/Combined_Mask.tif"
-
+# Usage
+directory = "/projects/arctic/share/ABoVE_Biomass"
+mask_path_1 = f"{directory}/OtherSpatialDatasets/CommonNA_ABoVE_Mask.tif"
+mask_path_2 = f"{directory}/OtherSpatialDatasets/CommonNA_Canada_Mask.tif"
+output_path = f"{directory}/OtherSpatialDatasets/Combined_Mask.tif"
 combine_masks(mask_path_1, mask_path_2, output_path)

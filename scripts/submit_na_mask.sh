@@ -21,4 +21,4 @@ fi
 type=$1
 
 # Run the Python script with the provided arguments
-python3 create_common_mask.py --type "$type"
+python3 01_create_common_mask.py --type "$type"

@@ -1,43 +1,122 @@
-# ABoVE
-Processing Scripts used in ABoVE Biomass Project
+# ABoVE Biomass Processing Scripts
 
-## Processing Datasets
-Anything that was used to process the datasets further is located in `scripts/datasets`. The following steps were taken
-1. Reproject Matasci dataset into ESRI:102001 and then make it into a BigTIFF file type in order to create a common NA Mask using `reproject_matasci.sh`
-2. Reproject Duncanson dataset into ESRI:102001 in order to create a common NA Mask. This was done in multiple steps as it was found the original Duncanson merged tif file was bad, note that the first layer of the tiles was used.
-    1. Select appropriate (Canda and Alaska regions) Duncanson tiles and download data tiles from [MAAP](https://docs.maap-project.org/en/latest/getting_started/getting_started.html#Signing-up-for-a-new-MAAP-account)
-    2. Mosaic and reproject the downloaded tiles using gdal in the `mosaic_reproject_duncanson.sh` script.
+Scripts used in the ABoVE Biomass Project to preprocess datasets, apply a common NoData mask, calculate zonal statistics, and analyze fire disturbance and timber harvest.
 
-## Creating and Applying the Common NA Mask
-Of the 7 different datasets, each masked out different things as no data. For example, one dataset may have only masked out bodies of water, while another may have masked out bodies of water and baren ground. In order to acurately calculate statisticsa cross the datasets, we want to create a Common NA Mask. This mask will then be applied across the datasets before calculating statistics.
-1. Create the Common NA Mask using `submit_na_mask.sh <type>`. Where `<type>` is either `Canada` or `ABoVE`, creating an NA mask for each of those regions. *Note: The `*.out` files are note included in this repo as there was nothing written to them.* As of right now, the Kraatz and Xu dataset are excluded from this creation for the following reasons.
-   
-    - Kraatz: Covers a tiny area that would not be useful in creating the na mask
-    - Xu: Resolution is too high (10,000m/pixel) compared to other datasets <-- A shape file extraction and analysis will be applied at resolution later on.
-    - **Note:** There was problems with Matasci and Wang not having a defined data value, so I defined there data value using:
-    ```python
-        #filename = '/projects/arctic/share/ABoVE_Biomass/Matasci2018/matasci_102001_bigtiff.tif'
-        filename = "/projects/arctic/share/ABoVE_Biomass/Wang2020/Wang102001.tif"
+---
 
-        nodata = 0.0
-        # open the file for editing
-        ras = gdal.Open(filename, GA_Update)
-        # loop through the image bands
-        for i in range(1, ras.RasterCount + 1):
-            # set the nodata value of the band
-            ras.GetRasterBand(i).SetNoDataValue(nodata)
-        # unlink the file object and save the results
-        ras = None
+## 📁 Directory Structure
+
+- `data/` - Some of the data used throughout this project
+- `scripts/datasets/` – Scripts used for dataset reprojection and mosaicking.
+- `scripts/` - Scripts used for creating & applying NA mask and calculating zonal statistics
+- `jupyter_notebooks/` – Jupyter notebooks for visualizing zonal statistics.
+- `ABoVE_Biomass_Analysis.Rmd` – RMarkdown report for fire and harvest analysis.
+
+---
+
+## 📦 Dataset Preprocessing
+
+### 1. Matasci Dataset
+
+- Reprojected to `ESRI:102001` and converted to BigTIFF using:
+```bash
+sbatch scripts/datasets/reproject_matasci.sh
+```
+
+### 2. Duncanson Dataset
+
+- Original merged TIFF was bad → used only the first layer of tiles
+- Mosaiced and Reprojected the tiles using:
+```bash
+sbatch scripts/datasets/mosaic_reproject_duncanson.sh
+```
+
+---
+
+## 🗺️ Common NA Mask Creation & Application
+
+To ensure consistency in data coverage, I created a Common NA Mask to account for differences in what each dataset marked as "no data".
+
+### 1. Create Individual NA Masks
+```bash
+sbatch submit_na_mask.sh <type>  # type = Canada or ABoVE
+```
+
+Excluded Datasets:
+- Kraatz: Limited spatial coverage
+- Xu: Resolution mismatch (10,000m/pixel) <-- A shape file extraction and analysis will be applied at resolution later on.
+- Matasci: High NoData due to exclusion of non-treed/low-quality (cloudy, high disturbance) plots <-- A shape file extraction and analysis will be applied at resolution later on.
+
+Fixes for undefined NoData values in Matasci and Wang:
+```python
+#filename = '../Matasci2018/matasci_102001_bigtiff.tif'
+filename = "../Wang2020/Wang102001.tif"
+
+nodata = 0.0
+ras = gdal.Open(filename, GA_Update)
+for i in range(1, ras.RasterCount + 1):
+    ras.GetRasterBand(i).SetNoDataValue(nodata)
+ras = None
+```
+
+### 2. Combine Masks
+
+```bash
+sbatch submit_combine_masks.sh
+```
+
+### 3. Apply the Common NA Mask
+
+```bash
+sbatch submit_apply_mask.sh
+```
+
+---
+
+## 📊 Zonal Statistics
+
+Calculate statistics for:
+
+- EPA Level 2 regions
+- Canadian provinces & Alaskan regions
+
+```bash
+sbatch submit_zonal_stats.sh <input_raster_file> <script_type> <coverage_ratio>
+```
+
+Arguments:
+
+- <input_raster_file>: Path to .tif dataset
+- <script_type>: CanadaAlaska or EPA2
+- <coverage_ratio>: Minimum coverage % (e.g., 45 recommended)
+
+Preprocessing for EPA Level 2 regions
+
+```python
+from shapely.ops import unary_union
+epa_shapefile = "../OtherSpatialDatasets/EPA_ecoregion_lvl2_clipped_102001.shp"
+shapes = gpd.read_file(epa_shapefile)
+combined_gdf = shapes.groupby(['NA_L2CODE', 'NA_L2NAME', 'NA_L2KEY']).agg({'geometry': unary_union}).reset_index()
+combined_gdf = combined_gdf[['NA_L2CODE', 'NA_L2NAME', 'NA_L2KEY', 'geometry']]
+combined_gdf = combined_gdf.set_geometry('geometry')
+combined_gdf.to_file("../OtherSpatialDatasets/EPA_ecoregion_lvl2_102001.shp")
+```
+
+---
+
+## 📈 Visualizing Zonal Statistics
+Use this Jupyter notebook to generate graphs: `jupyter_notebooks/Create_Stats_Graphs.ipynb `
+
+To configure:
+- Specify the path to `zonal_stats*.txt`
+- Choose visualization type: `EPA2` or `CanadaAlaska`
+
+---
+
+## 🔥/🌳 Fire Disturbance & Timber Harvest
+
+1. Reproject masked datasets to EPSG:4326:
+    ```bash
+    sbatch scripts/datasets/reproject_datasets_epsg4326.sh
     ```
-2. Make a combined NA mask using `submit_combine_masks.sh`
-3. Apply the Common NA Mask using `submit_apply_mask.sh`
-
-## Calculate Zonal Statistics
-Zonal statistics for the EPA level 2 regions and the Alaska/Canada proviences can be calculate using `sbatch submit_zonal_stats.sh <input_raster_file> <script_type> <coverage_ratio>` where:
-
-- `<input_raster_file>` is the dataset in `.tif` format.
-- `<script_type>` is `CanadaAlaska` or `EPA2` representing what type of zonal statistics to calculate
- - `<coverage_ratio>` is the acceptance ratio that the dataset covers a specfic zonal region. It is recommended to set this to 35.
-
-# Create charts of Zonal Statistics
-After running `submit_zonal_stats.sh`, data can be visualized using the jupyter notebook `jupyter_notebooks/Create_Stats_Graphs.ipynb`. The notebook is set up in such a way where one only needs to specify where the `zonal_stats*.txt` files are located and which zonal stats one wants to visualize (EPA2 or CanadaAlaska).
+2. Generate final tables and visuals using: `ABoVE_Biomass_Analysis.Rmd`
