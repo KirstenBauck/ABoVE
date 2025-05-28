@@ -88,7 +88,7 @@ Arguments:
 
 - <input_raster_file>: Path to .tif dataset
 - <script_type>: CanadaAlaska or EPA2
-- <coverage_ratio>: Minimum coverage % (e.g., 45 recommended)
+- <coverage_ratio>: Minimum coverage % (e.g., 0.45 recommended)
 
 Preprocessing for EPA Level 2 regions
 
