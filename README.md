@@ -4,7 +4,7 @@ Scripts used in the ABoVE Biomass Project to preprocess datasets, apply a common
 
 ---
 
-## 📁 Directory Structure
+## Directory Structure
 
 - `data/` - Some of the data used throughout this project
 - `scripts/datasets/` – Scripts used for dataset reprojection and mosaicking.
@@ -14,7 +14,7 @@ Scripts used in the ABoVE Biomass Project to preprocess datasets, apply a common
 
 ---
 
-## 📦 Dataset Preprocessing
+## Dataset Preprocessing
 
 ### 1. Matasci Dataset
 
@@ -33,7 +33,7 @@ sbatch scripts/datasets/mosaic_reproject_duncanson.sh
 
 ---
 
-## 🗺️ Common NA Mask Creation & Application
+## Common NA Mask Creation & Application
 
 To ensure consistency in data coverage, I created a Common NA Mask to account for differences in what each dataset marked as "no data".
 
@@ -73,7 +73,7 @@ sbatch submit_apply_mask.sh
 
 ---
 
-## 📊 Zonal Statistics
+## Zonal Statistics
 
 Calculate statistics for:
 
@@ -104,7 +104,7 @@ combined_gdf.to_file("../OtherSpatialDatasets/EPA_ecoregion_lvl2_102001.shp")
 
 ---
 
-## 📈 Visualizing Zonal Statistics
+## Visualizing Zonal Statistics
 Use this Jupyter notebook to generate graphs: `jupyter_notebooks/Create_Stats_Graphs.ipynb `
 
 To configure:
@@ -113,7 +113,7 @@ To configure:
 
 ---
 
-## 🔥/🌳 Fire Disturbance & Timber Harvest
+## Fire Disturbance & Timber Harvest
 
 1. Reproject masked datasets to EPSG:4326:
     ```bash
